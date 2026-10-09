@@ -7,5 +7,16 @@
       "https://community.openai.com/t/gpt-6-and-intelligent-ui-in-chatgpt/1404139"
     ],
     "note": "공식 공지(2026-10-07)로 확인. 무료·Go 사용자는 10월 8일부터 순차 적용"
+  },
+  {
+    "date": "2026-10-09",
+    "slug": "2026-10-09-google-synthid-detector-public",
+    "topic": "구글, AI로 만든 이미지·영상·음성을 가려내는 '신스ID 감지기' 전 세계 공개",
+    "sources": [
+      "https://blog.google/innovation-and-ai/models-and-research/google-deepmind/synth-id-ai-content/",
+      "https://blog.google/intl/ko-kr/company-news/technology/synth-id-ai-content-kr/",
+      "https://www.aitimes.com/news/articleView.html?idxno=216075"
+    ],
+    "note": "구글이 10월 7일(현지시간) 공식 발표했고 여러 매체가 확인했습니다. 딥페이크와 가짜 이미지는 비개발자 독자에게도 일상적인 문제라 쉽게 설명할 수 있습니다. 탈락한 후보는 두 가지입니다. 오픈AI 매출 하향 기사는 실적과 주가 중심이라 제외했습니다. 오픈AI 해고 연구원 서한은 일반인의 일상과 거리가 있어 제외했습니다. GPT-6 Intelligent UI는 이미 다룬 주제입니다."
   }
 ]
