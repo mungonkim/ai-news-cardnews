@@ -113,15 +113,19 @@ const WRITE_SYSTEM = `너는 "AI랑 친해지기" 인스타그램 카드뉴스 �
 
 [카드 구성 7장 (순서 고정)]
 1. cover: tag("AI NEWS | 주제"), title(최대 3줄, 줄당 8자 이내, 핵심 단어를 **강조**), subtitle(2줄)
-2. point "무슨 일이야?": 무슨 일이 있었는지. 가능하면 visual(chat 또는 flow)이나 image 중 하나
-3. point "뭐가 달라졌어?": 핵심 변화. image 또는 visual
+   - 표지 제목은 **훅**이다. 아래 형식 중 소식에 가장 맞는 하나를 골라 쓴다: 질문("이번엔 또 뭐가 좋아졌나?"), 비교("A vs B"), 숫자("가격 50% 인하"), 비밀·반전("신입만 알던 비밀"), 궁금증("진짜 절약해줄까?").
+   - 제목 둘째 줄(핵심)을 **강조**해서 한눈에 읽히게 한다. 낚시 같은 과장과 확인되지 않은 숫자는 쓰지 않는다.
+2. point: label은 질문 형태("어떤 게 공개됐어?", "뭐가 달라졌어?"), title은 한 문장 제목(줄당 12자 이내, 2줄), **bullets** 3~4개(각 30자 이내, 숫자와 이름은 그대로). body는 쓰지 않는다. 장의 **위쪽에는 근거 그림**이 온다: image(요청하면 코드가 채움) 또는 visual 중 하나.
+   - 숫자가 확인된 사실(facts)에 있으면 visual에 큰 숫자 카드 { "kind": "stats", "items": [ { "value": "-50%", "label": "출력 가격", "note": "$20 → $10" } ] } 를 우선 쓴다(2~3개). **facts에 없는 숫자는 절대 만들지 않는다.**
+   - 숫자가 없으면 image 또는 chat/flow visual을 쓴다.
+   - 두 point 장(2, 3번)의 label은 "무슨 일이야?"와 "뭐가 달라졌어?" 계열로 쓰되, 위 질문 형태로 구체화해도 좋다.
 4. term: 핵심 용어 풀이 (term, english, heading, body)
 5. meaning: 독자가 바로 해 볼 수 있는 행동 3가지 (items). 카드 위쪽에 "그래서 나한테 무슨 의미인데?"가 이미 표시되므로 title은 그 문장을 반복하지 말고 "이렇게 써 보세요"처럼 행동을 알려 주는 짧은 제목으로 쓴다.
 6. summary: 한 줄 정리 (title 3줄 이내, caption)
 7. outro: cta, sub, sources(출처 문구)
 
 [글자 수 제한 (넘으면 카드가 깨져)]
-- point/meaning/summary title: 줄당 10자 이내, 2~3줄 (\\n으로 줄바꿈). body: 90자 이내. term.body: 100자 이내. meaning item: 한 항목 40자 이내.
+- meaning/summary title: 줄당 10자 이내, 2~3줄 (\\n으로 줄바꿈). point title은 줄당 12자 이내 2줄, point bullets는 3~4개에 각 30자 이내. term.body: 100자 이내. meaning item: 한 항목 40자 이내.
 - 강조는 **단어** 형식으로 장마다 1~2개.
 
 [색]
@@ -206,7 +210,15 @@ export const validateSlides = (slides: Slide[]): void => {
   }
   const tooLong = (text: string, limit: number): boolean => text.replace(/\*\*/g, '').length > limit;
   for (const slide of slides) {
-    if (slide.type === 'point' && tooLong(slide.body, 120)) throw new Error('point 본문이 너무 깁니다.');
+    if (slide.type === 'point') {
+      if (slide.bullets && slide.bullets.length > 0) {
+        if (slide.bullets.length > 4 || slide.bullets.some((b) => tooLong(b, 48))) {
+          throw new Error('point 불릿이 너무 많거나 깁니다.');
+        }
+      } else if (tooLong(slide.body ?? '', 120)) {
+        throw new Error('point 본문이 너무 깁니다.');
+      }
+    }
     if (slide.type === 'term' && tooLong(slide.body, 130)) throw new Error('term 본문이 너무 깁니다.');
     if (slide.type === 'meaning' && slide.items.some((item) => tooLong(item, 55))) {
       throw new Error('meaning 항목이 너무 깁니다.');

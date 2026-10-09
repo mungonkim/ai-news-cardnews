@@ -5,7 +5,9 @@ export type ChatMessage = { role: 'user' | 'ai'; text: string };
 // 내용 장에 들어가는 그림 요소
 export type Visual =
   | { kind: 'chat'; messages: ChatMessage[]; note?: string }
-  | { kind: 'flow'; steps: string[] };
+  | { kind: 'flow'; steps: string[] }
+  // 큰 숫자 카드: 확인된 숫자만 쓴다
+  | { kind: 'stats'; items: { value: string; label: string; note?: string }[] };
 
 // 내용 장에 넣을 수 있는 이미지 (사진, 화면 캡처 등)
 type ImageSlot = {
@@ -32,7 +34,8 @@ export type Slide =
       // 그래픽 표지에서 구슬 주변에 떠 있는 장식 문구
       chips?: string[];
     }
-  | ({ type: 'point'; label: string; title: string; body: string; visual?: Visual } & ImageSlot)
+  // bullets가 있으면 "위쪽 그림(이미지 또는 숫자 카드) + 라벨 + 한 문장 제목 + 불릿" 구조로 그린다
+  | ({ type: 'point'; label: string; title: string; body?: string; bullets?: string[]; visual?: Visual } & ImageSlot)
   | ({ type: 'term'; term: string; english: string; heading: string; body: string } & ImageSlot)
   | ({ type: 'meaning'; title: string; items: string[] } & ImageSlot)
   | { type: 'summary'; title: string; caption: string }
@@ -88,6 +91,17 @@ const renderVisual = (visual: Visual): string => {
         <div class="chat">
           ${visual.messages.map((m) => `<div class="bubble ${m.role}">${format(m.text)}</div>`).join('')}
           ${visual.note ? `<div class="chat-note">${escapeHtml(visual.note)}</div>` : ''}
+        </div>`;
+    case 'stats':
+      return `
+        <div class="stats">
+          ${visual.items
+            .slice(0, 3)
+            .map(
+              (item) =>
+                `<div class="stat"><div class="stat-value">${format(item.value)}</div><div class="stat-label">${escapeHtml(item.label)}</div>${item.note ? `<div class="stat-note">${escapeHtml(item.note)}</div>` : ''}</div>`,
+            )
+            .join('')}
         </div>`;
     case 'flow':
       return `
@@ -148,12 +162,22 @@ const renderBody = (slide: Slide): string => {
         </div>`;
     case 'point': {
       const position = slide.imagePosition ?? 'middle';
+      if (slide.bullets && slide.bullets.length > 0) {
+        const proof = slide.image ? renderImage(slide) : slide.visual ? renderVisual(slide.visual) : '';
+        return `
+        <div class="evidence-top">${proof}</div>
+        <div class="evidence-text">
+          <span class="label">${escapeHtml(slide.label)}</span>
+          <h2 class="title headline">${format(slide.title)}</h2>
+          <ul class="bullets">${slide.bullets.map((b) => `<li>${format(b)}</li>`).join('')}</ul>
+        </div>`;
+      }
       return `
         <span class="label">${escapeHtml(slide.label)}</span>
         <h2 class="title${slide.visual || slide.image ? ' compact' : ''}">${format(slide.title)}</h2>
         ${position === 'middle' ? renderImage(slide) : ''}
         ${slide.visual ? renderVisual(slide.visual) : ''}
-        <p class="body${slide.visual || slide.image ? ' compact' : ''}">${format(slide.body)}</p>
+        <p class="body${slide.visual || slide.image ? ' compact' : ''}">${format(slide.body ?? '')}</p>
         ${position === 'bottom' ? renderImage(slide) : ''}`;
     }
     case 'term': {
@@ -315,6 +339,20 @@ const styles = `
   .orb span { font-size: 190px; font-weight: 800; letter-spacing: -0.04em; color: rgba(255,255,255,0.95); text-shadow: 0 8px 40px rgba(0,0,0,0.25); }
   .chip { position: absolute; padding: 16px 30px; border-radius: 999px; background: rgba(18,18,30,0.88); border: 2px solid rgba(255,255,255,0.25); font-size: 30px; font-weight: 600; box-shadow: 0 10px 40px rgba(0,0,0,0.35); color: #f5f5f7; }
 
+  /* 근거 그림이 위에 오는 구조: 위쪽 그림, 아래쪽 라벨 + 한 문장 제목 + 불릿 */
+  .content.evidence { justify-content: flex-start; padding-top: 36px; gap: 40px; }
+  .evidence-top .slide-image img { height: 600px; }
+  .evidence-text { display: flex; flex-direction: column; gap: 22px; }
+  .title.headline { font-size: 60px; line-height: 1.3; }
+  .bullets { list-style: none; display: flex; flex-direction: column; gap: 16px; }
+  .bullets li { position: relative; padding-left: 36px; font-size: 40px; line-height: 1.5; font-weight: 500; color: var(--body); }
+  .bullets li::before { content: ''; position: absolute; left: 0; top: 23px; width: 15px; height: 15px; border-radius: 50%; background: var(--accent); }
+  .stats { display: flex; gap: 20px; }
+  .stat { flex: 1; padding: 84px 20px; border-radius: 32px; background: var(--box-bg); border: 2px solid var(--box-border); text-align: center; }
+  .stat-value { font-size: 100px; line-height: 1.1; font-weight: 900; letter-spacing: -0.03em; color: var(--accent); }
+  .stat-label { margin-top: 14px; font-size: 32px; font-weight: 700; }
+  .stat-note { margin-top: 6px; font-size: 26px; color: var(--muted); }
+
   /* 내용 장 그림 요소 */
   .slide-image { margin: 0; }
   .slide-image img { display: block; width: 100%; height: 580px; object-fit: cover; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.18); }
@@ -357,7 +395,8 @@ export const buildSlideHtml = (
         ? '<div class="tint-top"></div>'
         : '<div class="glow"></div>';
   const hasImage = 'image' in slide && Boolean(slide.image) && !isCover;
-  const contentClass = `${isCover ? ' end' : isOutro ? ' center' : ''}${hasImage ? ' has-image' : ''}`;
+  const isEvidence = slide.type === 'point' && Boolean(slide.bullets && slide.bullets.length > 0);
+  const contentClass = `${isCover ? ' end' : isOutro ? ' center' : ''}${hasImage ? ' has-image' : ''}${isEvidence ? ' evidence' : ''}`;
   const bodyClasses = [
     isCover && slide.image ? 'photo' : '',
     isLight ? 'light' : '',
