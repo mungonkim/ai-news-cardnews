@@ -59,11 +59,11 @@ jobs:
           git diff --cached --quiet || git commit -m "다룬 기사 기록 추가"
           git push
 
-      - name: 결과물 보관 (7일)
+      - name: 결과물 보관 (90일)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cardnews-output
           path: output/
-          retention-days: 7
+          retention-days: 90
           if-no-files-found: ignore
