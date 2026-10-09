@@ -323,7 +323,7 @@ const styles = `
   /* 표지 그래픽 */
   .cover-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
   /* 사진은 화면 전체에 그대로 보이게 두고, 글자가 읽힐 만큼만 아주 약하게 눌러 준다 */
-  .cover-shade { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0) 20%, rgba(0,0,0,0) 48%, rgba(0,0,0,0.34) 72%, rgba(0,0,0,0.5) 100%); }
+  .cover-shade { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(0,0,0,0.34) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 48%, rgba(0,0,0,0.34) 72%, rgba(0,0,0,0.5) 100%); }
   .cover-shade.soft { background: linear-gradient(180deg, rgba(10,10,18,0) 40%, rgba(10,10,18,0.85) 66%, #0a0a12 86%); }
   body.photo .cover-title, body.photo .lead, body.photo .tag, body.photo .cover-foot { text-shadow: 0 2px 20px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.35); }
   body.photo .lead, body.photo .swipe, body.photo .credit { color: rgba(255,255,255,0.92); }
@@ -340,15 +340,15 @@ const styles = `
   .chip { position: absolute; padding: 16px 30px; border-radius: 999px; background: rgba(18,18,30,0.88); border: 2px solid rgba(255,255,255,0.25); font-size: 30px; font-weight: 600; box-shadow: 0 10px 40px rgba(0,0,0,0.35); color: #f5f5f7; }
 
   /* 근거 그림이 위에 오는 구조: 위쪽 그림, 아래쪽 라벨 + 한 문장 제목 + 불릿 */
-  .content.evidence { justify-content: flex-start; padding-top: 36px; gap: 40px; }
-  .evidence-top .slide-image img { height: 600px; }
+  .content.evidence { justify-content: center; gap: 46px; }
+  .evidence-top .slide-image img { height: 640px; }
   .evidence-text { display: flex; flex-direction: column; gap: 22px; }
   .title.headline { font-size: 60px; line-height: 1.3; }
   .bullets { list-style: none; display: flex; flex-direction: column; gap: 16px; }
   .bullets li { position: relative; padding-left: 36px; font-size: 40px; line-height: 1.5; font-weight: 500; color: var(--body); }
   .bullets li::before { content: ''; position: absolute; left: 0; top: 23px; width: 15px; height: 15px; border-radius: 50%; background: var(--accent); }
   .stats { display: flex; gap: 20px; }
-  .stat { flex: 1; padding: 84px 20px; border-radius: 32px; background: var(--box-bg); border: 2px solid var(--box-border); text-align: center; }
+  .stat { flex: 1; padding: 120px 20px; border-radius: 32px; background: var(--box-bg); border: 2px solid var(--box-border); text-align: center; }
   .stat-value { font-size: 100px; line-height: 1.1; font-weight: 900; letter-spacing: -0.03em; color: var(--accent); }
   .stat-label { margin-top: 14px; font-size: 32px; font-weight: 700; }
   .stat-note { margin-top: 6px; font-size: 26px; color: var(--muted); }

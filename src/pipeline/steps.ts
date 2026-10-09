@@ -6,6 +6,8 @@ import type { Candidate, ImageRequest, Selection, VerifiedFacts, WrittenCard } f
 import { PALETTE_NAMES, type CardContent, type PaletteName, type Slide } from '../templates.ts';
 
 const BRAND = 'AI랑 친해지기';
+// 게시물 문구 맨 끝에 붙는 인스타그램 계정 아이디
+const ACCOUNT_HANDLE = '@ai_chingu';
 
 type CoveredArticle = { date: string; slug: string; topic: string; sources: string[] };
 
@@ -143,9 +145,9 @@ const WRITE_SYSTEM = `너는 "AI랑 친해지기" 인스타그램 카드뉴스 �
 [게시물 문구 caption]
 - 인스타그램 게시물 본문. 한국어 부분과 영어 부분, 두 부분으로 쓴다.
 - 한국어 부분: 첫 줄은 시선을 끄는 한 줄(이모지 1개 허용), 핵심 3줄 요약, 독자 행동 유도(댓글, 팔로우), 출처 한 줄, 해시태그 8~10개.
-- 그 아래에 빈 줄과 "—————" 구분선을 넣고, 같은 내용을 외국인 독자를 위해 영어로 쓴다 (Hook 한 줄, 핵심 3줄 요약, 댓글 · 팔로우 유도, Source 한 줄, 영어 해시태그 5개). 한국어 부분을 직역하지 말고 자연스러운 영어로, 용어는 쉽게 풀어 써.
-- 전체 길이는 한국어와 영어를 합쳐 1800자 이내, 해시태그는 모두 합쳐 15개 이내.
-- 개인정보와 계정 아이디는 넣지 마.
+- 그 아래에 빈 줄과 "—————" 구분선을 넣고, 같은 내용을 외국인 독자를 위해 영어로 쓴다 (Hook 한 줄, 핵심 3줄 요약, 댓글 · 팔로우 유도, Source 한 줄). **영어 부분에는 해시태그를 쓰지 않는다**(한국어 부분과 중복하지 않는다). 한국어 부분을 직역하지 말고 자연스러운 영어로, 용어는 쉽게 풀어 써.
+- 전체 길이는 한국어와 영어를 합쳐 1800자 이내, 해시태그는 한국어 부분에만 쓰고 10개 이내로 하되, 해외 독자가 검색할 영어 태그(#AINews 등)를 3~4개 섞는다.
+- 개인정보는 넣지 마. 마지막 줄의 우리 계정 아이디(@ai_chingu)는 코드가 붙이니 직접 쓰지 마.
 
 [출력] 설명 없이 아래 JSON만 코드 블록으로 출력해.
 {
@@ -198,7 +200,9 @@ ${example}`;
   if (!images.some((img) => img.slideIndex === 0)) {
     throw new Error('표지 이미지 요청이 없습니다.');
   }
-  return { card: { ...raw.card, slug, brand: BRAND, theme: 'light', palette: PALETTE_NAMES.includes(raw.card.palette as PaletteName) ? raw.card.palette : 'violet' }, caption: raw.caption, images };
+  // 게시물 문구 맨 끝에 우리 계정 아이디를 붙인다 (이미 있으면 중복하지 않는다)
+  const caption = raw.caption.includes(ACCOUNT_HANDLE) ? raw.caption.trimEnd() : `${raw.caption.trimEnd()}\n\n${ACCOUNT_HANDLE}`;
+  return { card: { ...raw.card, slug, brand: BRAND, theme: 'light', palette: PALETTE_NAMES.includes(raw.card.palette as PaletteName) ? raw.card.palette : 'violet' }, caption, images };
 };
 
 // 카드 구성이 약속과 같은지 확인한다 (장 수와 종류, 글자 수 한도)
