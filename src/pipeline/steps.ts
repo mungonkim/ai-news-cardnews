@@ -116,7 +116,7 @@ const WRITE_SYSTEM = `너는 "AI랑 친해지기" 인스타그램 카드뉴스 �
 2. point "무슨 일이야?": 무슨 일이 있었는지. 가능하면 visual(chat 또는 flow)이나 image 중 하나
 3. point "뭐가 달라졌어?": 핵심 변화. image 또는 visual
 4. term: 핵심 용어 풀이 (term, english, heading, body)
-5. meaning "그래서 나한테 무슨 의미인데?": 독자가 바로 해 볼 수 있는 행동 3가지 (items)
+5. meaning: 독자가 바로 해 볼 수 있는 행동 3가지 (items). 카드 위쪽에 "그래서 나한테 무슨 의미인데?"가 이미 표시되므로 title은 그 문장을 반복하지 말고 "이렇게 써 보세요"처럼 행동을 알려 주는 짧은 제목으로 쓴다.
 6. summary: 한 줄 정리 (title 3줄 이내, caption)
 7. outro: cta, sub, sources(출처 문구)
 
