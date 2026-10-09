@@ -196,9 +196,6 @@ const renderBody = (slide: Slide): string => {
           <div class="action">
             <span class="action-icon">${icons.bookmark}</span><span class="action-label">저장</span>
           </div>
-        </div>
-        <div class="sources">
-          ${slide.sources.map((source) => `<p>출처 · ${escapeHtml(source)}</p>`).join('')}
         </div>`;
   }
 };
