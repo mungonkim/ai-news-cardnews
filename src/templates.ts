@@ -43,20 +43,24 @@ export type CardContent = {
   brand: string;
   // 내용 장의 테마. dark는 어두운 배경, light는 흰 배경 + 장마다 다른 색 그라데이션
   theme?: Theme;
+  // 내용 장 전체에 쓰는 색. 표지 분위기와 어울리는 색 하나를 고른다 (기본 violet)
+  palette?: PaletteName;
   slides: Slide[];
 };
 
 type CoverSlide = Extract<Slide, { type: 'cover' }>;
 
-// 밝은 테마에서 내용 장마다 돌아가며 쓰는 색 (상단 그라데이션 색, 강조 색)
-const PALETTE: { tint: string; accent: string }[] = [
-  { tint: '#b9a4ff', accent: '#6a3df0' },
-  { tint: '#ff9fc0', accent: '#d93a77' },
-  { tint: '#ffb59a', accent: '#e0572f' },
-  { tint: '#ffc98a', accent: '#c97410' },
-  { tint: '#9cc4ff', accent: '#2563eb' },
-  { tint: '#9be3b8', accent: '#178a4d' },
-];
+// 밝은 테마에서 한 편 전체(표지와 마지막 장 제외)에 같은 색을 쓴다 (상단 그라데이션 색, 강조 색)
+export const PALETTE_NAMES = ['violet', 'pink', 'blue', 'orange', 'green'] as const;
+export type PaletteName = (typeof PALETTE_NAMES)[number];
+
+const PALETTE: Record<PaletteName, { tint: string; accent: string }> = {
+  violet: { tint: '#c4b5fd', accent: '#6a3df0' },
+  pink: { tint: '#ffb3cd', accent: '#d93a77' },
+  blue: { tint: '#a9c9ff', accent: '#2563eb' },
+  orange: { tint: '#ffd0a1', accent: '#c97410' },
+  green: { tint: '#a8e6c1', accent: '#178a4d' },
+};
 
 // HTML 특수문자를 막고, **강조** 표시를 형광펜 효과로 바꾼다
 const escapeHtml = (text: string): string =>
@@ -335,6 +339,7 @@ export const buildSlideHtml = (
   brand: string,
   cover?: CoverSlide,
   theme: Theme = 'dark',
+  paletteName: PaletteName = 'violet',
 ): string => {
   const page = String(index + 1).padStart(2, '0');
   const all = String(total).padStart(2, '0');
@@ -342,7 +347,7 @@ export const buildSlideHtml = (
   const isOutro = slide.type === 'outro';
   // 밝은 테마는 표지와 마지막 장을 제외한 내용 장에만 적용한다
   const isLight = theme === 'light' && !isCover && !isOutro;
-  const palette = PALETTE[(index - 1 + PALETTE.length) % PALETTE.length];
+  const palette = PALETTE[paletteName];
   // 마지막 장은 표지와 같은 배경을 어둡게 깔아 처음과 끝이 이어지게 한다
   const background = isCover
     ? renderCoverBackground(slide)

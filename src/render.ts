@@ -59,7 +59,7 @@ export const renderCard = async (
     const cover = slides.find((s): s is Extract<Slide, { type: 'cover' }> => s.type === 'cover');
 
     for (const [index, slide] of slides.entries()) {
-      const html = buildSlideHtml(slide, index, slides.length, content.brand, cover, content.theme);
+      const html = buildSlideHtml(slide, index, slides.length, content.brand, cover, content.theme, content.palette);
       await page.setContent(html, { waitUntil: 'networkidle' });
       // 폰트가 모두 불러와진 뒤에 촬영한다
       await page.evaluate(() => document.fonts.ready);

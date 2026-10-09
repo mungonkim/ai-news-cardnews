@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { askJson } from './claude.ts';
 import type { Candidate, ImageRequest, Selection, VerifiedFacts, WrittenCard } from './types.ts';
-import type { CardContent, Slide } from '../templates.ts';
+import { PALETTE_NAMES, type CardContent, type PaletteName, type Slide } from '../templates.ts';
 
 const BRAND = 'AI랑 친해지기';
 
@@ -124,6 +124,9 @@ const WRITE_SYSTEM = `너는 "AI랑 친해지기" 인스타그램 카드뉴스 �
 - point/meaning/summary title: 줄당 10자 이내, 2~3줄 (\\n으로 줄바꿈). body: 90자 이내. term.body: 100자 이내. meaning item: 한 항목 40자 이내.
 - 강조는 **단어** 형식으로 장마다 1~2개.
 
+[색]
+- 내용 장(2~6번)은 모두 같은 색을 쓴다. card.palette에 표지 이미지 분위기와 어울리는 색 하나를 고른다 (보라 계열 표지면 violet, 따뜻한 표지면 orange 등). 장마다 색이 달라지지 않는다.
+
 [이미지]
 - images 배열에 이미지가 들어갈 장을 요청해. 표지(slideIndex 0)는 반드시, 중간 장은 최대 2장 (point 또는 meaning 장).
 - 이미지를 넣는 장에는 card JSON의 해당 슬라이드에 image 필드를 넣지 마. 코드가 채워 줘.
@@ -142,7 +145,7 @@ const WRITE_SYSTEM = `너는 "AI랑 친해지기" 인스타그램 카드뉴스 �
 
 [출력] 설명 없이 아래 JSON만 코드 블록으로 출력해.
 {
-  "card": { 카드 JSON. 예시와 같은 구조. theme은 "light", brand는 "${BRAND}" },
+  "card": { 카드 JSON. 예시와 같은 구조. theme은 "light", brand는 "${BRAND}", palette는 표지 분위기에 어울리는 색 하나("violet", "pink", "blue", "orange", "green" 중) },
   "caption": "게시물 문구",
   "images": [ { "slideIndex": 0, "scene": "...", "shoot": "..." } ]
 }`;
@@ -191,7 +194,7 @@ ${example}`;
   if (!images.some((img) => img.slideIndex === 0)) {
     throw new Error('표지 이미지 요청이 없습니다.');
   }
-  return { card: { ...raw.card, slug, brand: BRAND, theme: 'light' }, caption: raw.caption, images };
+  return { card: { ...raw.card, slug, brand: BRAND, theme: 'light', palette: PALETTE_NAMES.includes(raw.card.palette as PaletteName) ? raw.card.palette : 'violet' }, caption: raw.caption, images };
 };
 
 // 카드 구성이 약속과 같은지 확인한다 (장 수와 종류, 글자 수 한도)

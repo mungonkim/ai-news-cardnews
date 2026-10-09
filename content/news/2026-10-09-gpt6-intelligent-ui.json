@@ -68,5 +68,6 @@
       ]
     }
   ],
-  "theme": "light"
+  "theme": "light",
+  "palette": "blue"
 }
