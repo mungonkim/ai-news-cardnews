@@ -10,7 +10,7 @@ GitHub Actions (매일 08:00 KST)
  3. Claude가 공식 원문으로 사실 확인 (확인하지 못한 내용은 카드에서 제외)
  4. Claude가 카드 7장 + 게시물 문구 + 이미지 장면 작성
  5. 이미지 API로 표지와 중간 장 이미지 생성 (src/pipeline/images.ts)
- 6. HTML 템플릿 → Chromium → PNG 1080x1350 (src/render.ts, templates.ts)
+ 6. HTML 템플릿 → Chromium → PNG 1080x1440 (인스타 격자 3:4) (src/render.ts, templates.ts)
  7. 슬랙으로 카드 + 게시물 문구 + 출처 전송, 오류도 슬랙으로 알림
  8. 다룬 기사 기록(data/covered-articles.json)으로 중복 방지
 ```

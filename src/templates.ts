@@ -1,4 +1,4 @@
-// 카드 한 장(1080x1350)을 HTML로 만드는 템플릿 모음
+// 카드 한 장(1080x1440)을 HTML로 만드는 템플릿 모음
 
 export type ChatMessage = { role: 'user' | 'ai'; text: string };
 
@@ -227,7 +227,7 @@ const styles = `
     --bubble-ai: #eceef5;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 1080px; height: 1350px; }
+  html, body { width: 1080px; height: 1440px; }
   body {
     background: var(--bg);
     color: var(--text);
@@ -313,7 +313,7 @@ const styles = `
 
   /* 내용 장 그림 요소 */
   .slide-image { margin: 0; }
-  .slide-image img { display: block; width: 100%; height: 540px; object-fit: cover; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.18); }
+  .slide-image img { display: block; width: 100%; height: 580px; object-fit: cover; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.18); }
   .slide-image figcaption { margin-top: 12px; font-size: 24px; color: var(--muted); text-align: right; }
   .chat { display: flex; flex-direction: column; gap: 18px; padding: 34px; border-radius: 34px; background: var(--box-bg); border: 2px solid var(--box-border); }
   .bubble { max-width: 86%; padding: 22px 30px; border-radius: 28px; font-size: 33px; line-height: 1.5; font-weight: 500; }

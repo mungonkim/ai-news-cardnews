@@ -1,15 +1,15 @@
-// 카드 내용(JSON)을 읽어 슬라이드마다 1080x1350 PNG로 저장한다.
+// 카드 내용(JSON)을 읽어 슬라이드마다 1080x1440 PNG로 저장한다.
 // 사용법: node src/render.ts content/samples/hallucination.json
 import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
 import { buildSlideHtml, type CardContent, type Slide } from './templates.ts';
 
-// 인스타그램 피드 권장 규격: 4:5 세로형 1080x1350.
-// 한 게시물의 모든 장은 같은 비율이어야 하고, 프로필 그리드(3:4)에서는 좌우가 조금 잘리므로
-// 중요한 글자와 요소는 좌우 여백 안쪽(약 40px 이상)에 둔다.
+// 인스타그램 프로필 격자(3:4)에 맞춘 세로형 1080x1440. 4:5로 만들면 격자에서 좌우가 잘려 보인다.
+// 한 게시물의 모든 장은 같은 비율이어야 한다. 3:4면 격자에서 잘리지 않지만,
+// 가장자리가 잘리는 화면을 대비해 중요한 글자는 좌우 여백 안쪽에 둔다.
 const WIDTH = 1080;
-const HEIGHT = 1350;
+const HEIGHT = 1440;
 
 const MIME_TYPES: Record<string, string> = {
   '.png': 'image/png',
