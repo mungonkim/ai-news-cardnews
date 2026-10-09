@@ -1,0 +1,69 @@
+name: 매일 카드뉴스 만들기
+
+on:
+  schedule:
+    # 매일 한국 시간 오전 8시 (UTC 23:00)
+    - cron: '0 23 * * *'
+  # 직접 실행해서 확인할 때 사용
+  workflow_dispatch:
+    inputs:
+      url:
+        description: '특정 기사 주소로 만들기 (비워 두면 자동 선정)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-cardnews
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: 브라우저 설치
+        run: npx playwright-core install --with-deps chromium
+
+      - name: 카드뉴스 만들기
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          INPUT_URL: ${{ github.event.inputs.url }}
+        run: |
+          if [ -n "$INPUT_URL" ]; then
+            npm start -- --url "$INPUT_URL"
+          else
+            npm start
+          fi
+
+      - name: 다룬 기사 기록 저장
+        if: success()
+        run: |
+          git config user.name "cardnews-bot"
+          git config user.email "cardnews-bot@users.noreply.github.com"
+          git add data/covered-articles.json
+          git diff --cached --quiet || git commit -m "다룬 기사 기록 추가"
+          git push
+
+      - name: 결과물 보관 (7일)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardnews-output
+          path: output/
+          retention-days: 7
+          if-no-files-found: ignore

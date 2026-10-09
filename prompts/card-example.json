@@ -1,0 +1,72 @@
+{
+  "slug": "2026-10-09-gpt6-intelligent-ui",
+  "brand": "AI랑 친해지기",
+  "slides": [
+    {
+      "type": "cover",
+      "tag": "AI NEWS | ChatGPT",
+      "title": "ChatGPT가\n**계산기까지**\n만들어 줘요",
+      "subtitle": "글로만 답하던 AI가\n눌러 쓰는 화면으로 바뀌었어요",
+      "image": "2026-10-09-gpt6-intelligent-ui.cover.png"
+    },
+    {
+      "type": "point",
+      "label": "무슨 일이야?",
+      "title": "ChatGPT 답이\n달라졌어요",
+      "body": "OpenAI가 **GPT-6**와 **Intelligent UI**를 공개했어요. 이제 ChatGPT는 글만이 아니라 **그림, 차트, 버튼**이 들어 있는 답도 줄 수 있어요.",
+      "visual": {
+        "kind": "chat",
+        "messages": [
+          {
+            "role": "user",
+            "text": "5명이서 밥값 나눠 내는 계산기 만들어 줘"
+          },
+          {
+            "role": "ai",
+            "text": "좋아요! 금액과 인원을 넣으면 1인당 얼마인지 바로 계산해 드릴게요."
+          }
+        ],
+        "note": "※ 공식 발표의 '더치페이 계산기' 예시를 바탕으로 꾸민 가상의 대화예요"
+      }
+    },
+    {
+      "type": "point",
+      "label": "뭐가 달라졌어?",
+      "title": "글 대신\n눌러 보는 답",
+      "body": "그림이나 차트를 **눌러 보면서** 원리를 익힐 수 있고, 게임이나 계산기 같은 **도구를 바로 만들어** 쓸 수 있어요.",
+      "image": "2026-10-09-gpt6-intelligent-ui.slide3.png",
+      "imagePosition": "bottom"
+    },
+    {
+      "type": "term",
+      "term": "UI",
+      "english": "User Interface · 사용자 화면",
+      "heading": "내가 **보고 누르는** 화면",
+      "body": "앱에서 버튼, 입력창, 그래프처럼 우리가 보고 누르는 부분이에요. **Intelligent UI**는 AI가 질문에 맞는 화면을 **그때그때 만들어 준다**는 뜻이에요."
+    },
+    {
+      "type": "meaning",
+      "title": "이렇게 써 보세요",
+      "items": [
+        "**무료 사용자**도 10월 8일부터 순차적으로 써 볼 수 있어요",
+        "계산기나 간단한 게임을 **말로 주문**해 보세요",
+        "계산 결과는 **한 번 더** 확인하세요"
+      ],
+      "image": "2026-10-09-gpt6-intelligent-ui.slide5.png"
+    },
+    {
+      "type": "summary",
+      "title": "AI가 이제\n**글 대신 도구**로\n답해요",
+      "caption": "내 계정에는 차례로 적용돼서, 아직 안 보여도 조금 기다려 보세요."
+    },
+    {
+      "type": "outro",
+      "cta": "써 보신 분은\n**댓글**로 알려 주세요",
+      "sub": "**팔로우**하고\n다음 AI 소식도 받아보세요",
+      "sources": [
+        "OpenAI, GPT-6 and Intelligent UI in ChatGPT (2026.10.7)"
+      ]
+    }
+  ],
+  "theme": "light"
+}

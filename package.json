@@ -1,0 +1,22 @@
+{
+  "name": "ai-news-cardnews",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node src/run.ts",
+    "collect": "node src/pipeline/collect.ts",
+    "render": "node src/render.ts",
+    "typecheck": "tsc",
+    "start:local": "node --env-file=.env src/run.ts"
+  },
+  "description": "AI 뉴스를 매일 입문자용 카드뉴스로 만드는 시스템",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
+    "playwright-core": "^1.64.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2"
+  },
+  "private": true
+}
