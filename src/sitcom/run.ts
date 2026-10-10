@@ -1,8 +1,9 @@
 // AI 시트콤 한 편 만들기: 기준 장면 이미지 → 구간별 영상(Higgsfield, Kling 3.0) → 편집(자막, 배너) → 슬랙 전송.
-// 사용법: node src/sitcom/run.ts <대본 JSON 경로>  (예: content/sitcom/2026-10-10-one-word-email.json)
+// 사용법: node src/sitcom/run.ts [대본 JSON 경로]  (예: content/sitcom/2026-10-10-one-word-email.json)
+//   경로를 비우면 content/sitcom/에서 아직 만들지 않은 대본 중 가장 이른 것을 고른다 (매주 월요일 자동 실행)
 //   --no-slack  슬랙으로 보내지 않는다
 // 필요한 설정: HIGGSFIELD_API_KEY, OPENAI_API_KEY(기준 이미지가 없을 때만), SLACK_BOT_TOKEN, SLACK_CHANNEL_ID
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { generateWithRetry } from '../pipeline/images.ts';
 import { sendCards, sendText } from '../pipeline/slack.ts';
@@ -14,6 +15,9 @@ const ROOT = path.resolve(import.meta.dirname, '../..');
 const VIDEO_ENDPOINT = process.env.SITCOM_VIDEO_ENDPOINT ?? 'kling-video/v3.0/std/image-to-video';
 // 매 편 같은 강아지와 여자가 나오도록 기준 장면 이미지를 한 번 만들어 저장해 두고 계속 쓴다
 const BASE_IMAGE = path.join(ROOT, 'assets', 'sitcom', 'base.png');
+const EPISODE_DIR = path.join(ROOT, 'content', 'sitcom');
+// 이미 만든 편의 slug 목록 (같은 대본을 두 번 만들지 않게 한다)
+const MADE_FILE = path.join(ROOT, 'data', 'sitcom-made.json');
 const ACCOUNT_HANDLE = '@ai_chingu';
 
 // 등장인물과 세트 (모든 컷에 같은 설명을 붙여 모습이 바뀌지 않게 한다)
@@ -44,10 +48,23 @@ const ensureBaseImage = async (): Promise<boolean> => {
   return true;
 };
 
+const readMade = async (): Promise<string[]> =>
+  (await exists(MADE_FILE)) ? (JSON.parse(await readFile(MADE_FILE, 'utf8')) as string[]) : [];
+
+// 아직 만들지 않은 대본 중 파일 이름(날짜)이 가장 이른 것을 고른다
+const pickNextEpisode = async (): Promise<string> => {
+  const made = new Set(await readMade());
+  const files = (await readdir(EPISODE_DIR)).filter((f) => f.endsWith('.json')).sort();
+  const next = files.find((f) => !made.has(f.replace(/\.json$/, '')));
+  if (!next) throw new Error('만들 대본이 없습니다. content/sitcom/에 새 대본을 추가해 주세요.');
+  return path.join(EPISODE_DIR, next);
+};
+
 const run = async (): Promise<void> => {
-  const episodePath = process.argv.slice(2).find((arg) => !arg.startsWith('--'));
-  if (!episodePath) throw new Error('대본 JSON 경로를 알려 주세요. 예: node src/sitcom/run.ts content/sitcom/<파일>.json');
-  const episode = JSON.parse(await readFile(path.resolve(ROOT, episodePath), 'utf8')) as Episode;
+  const episodeArg = process.argv.slice(2).find((arg) => !arg.startsWith('--'));
+  const episodePath = episodeArg ? path.resolve(ROOT, episodeArg) : await pickNextEpisode();
+  log(`대본: ${path.relative(ROOT, episodePath)}`);
+  const episode = JSON.parse(await readFile(episodePath, 'utf8')) as Episode;
   const outDir = path.join(ROOT, 'output', 'sitcom', episode.slug);
   await mkdir(outDir, { recursive: true });
 
@@ -95,6 +112,8 @@ const run = async (): Promise<void> => {
   const caption = `${episode.caption.trimEnd()}\n\n${ACCOUNT_HANDLE}`;
   await writeFile(path.join(outDir, 'caption.txt'), caption);
   log(`완성: ${finalFile}`);
+  const made = await readMade();
+  if (!made.includes(episode.slug)) await writeFile(MADE_FILE, `${JSON.stringify([...made, episode.slug], null, 2)}\n`);
 
   // 4. 슬랙 알림
   if (flag('--no-slack')) return;

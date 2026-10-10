@@ -1,12 +1,16 @@
 name: AI 시트콤 만들기
 
 on:
-  # 직접 실행할 때 대본 파일을 고른다
+  schedule:
+    # 매주 월요일 한국 시간 오전 9시 17분쯤 (UTC 월요일 00:17). 정각은 건너뛰는 일이 잦아 비껴 둔다
+    - cron: '17 0 * * 1'
+  # 직접 실행할 때 대본 파일을 고를 수 있다 (비우면 아직 안 만든 다음 대본)
   workflow_dispatch:
     inputs:
       episode:
-        description: '대본 JSON 경로 (예: content/sitcom/2026-10-10-one-word-email.json)'
-        required: true
+        description: '대본 JSON 경로 (비우면 아직 안 만든 다음 대본, 예: content/sitcom/2026-10-12-diet-starts-today.json)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -41,16 +45,22 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
           EPISODE: ${{ github.event.inputs.episode }}
-        run: npm run sitcom -- "$EPISODE"
+        run: |
+          if [ -n "$EPISODE" ]; then
+            npm run sitcom -- "$EPISODE"
+          else
+            npm run sitcom
+          fi
 
-      # 처음 만든 기준 장면 이미지는 저장소에 남겨 다음 편에도 같은 인물을 쓴다
-      - name: 기준 장면 이미지 저장
+      # 기준 장면 이미지(처음 한 번)와 만든 편 기록을 저장소에 남긴다
+      - name: 기록 저장
         if: success()
         run: |
           git config user.name "cardnews-bot"
           git config user.email "cardnews-bot@users.noreply.github.com"
-          git add assets/sitcom/base.png
-          git diff --cached --quiet || git commit -m "시트콤 기준 장면 이미지 추가"
+          git add assets/sitcom/base.png data/sitcom-made.json
+          git diff --cached --quiet || git commit -m "시트콤 기록 추가"
+          git pull --rebase
           git push
 
       - name: 결과물 보관 (3일)
