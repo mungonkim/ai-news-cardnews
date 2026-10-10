@@ -27,6 +27,12 @@ export const extractJson = (text: string): unknown => {
   try {
     return JSON.parse(candidate);
   } catch {
+    // 문자열 안에 줄바꿈이 섞여 깨진 경우를 대비해 줄바꿈을 공백으로 바꿔 한 번 더 읽는다
+    try {
+      return JSON.parse(candidate.replace(/\r?\n\s*/g, ' '));
+    } catch {
+      // 아래에서 오류로 알린다
+    }
     throw new Error(`Claude의 답변에서 JSON을 읽지 못했습니다: ${text.slice(0, 200)}`);
   }
 };
@@ -50,10 +56,11 @@ export const askJson = async (options: AskOptions): Promise<unknown> => {
       ...(tools.length > 0 ? { tools } : {}),
     });
 
+    // 웹 검색 인용 때문에 글이 여러 조각으로 오는데, 조각 사이에 줄바꿈을 넣으면 문장 한가운데가 끊겨 JSON이 깨진다
     text = response.content
       .filter((block): block is Anthropic.Messages.TextBlock => block.type === 'text')
       .map((block) => block.text)
-      .join('\n');
+      .join('');
 
     if (response.stop_reason !== 'pause_turn') break;
     messages.push({ role: 'assistant', content: response.content });
