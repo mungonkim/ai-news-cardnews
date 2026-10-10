@@ -78,7 +78,8 @@ const run = async (): Promise<void> => {
   if (flag('--no-slack')) {
     log(`슬랙 전송을 건너뜁니다. 결과: ${outDir}`);
   } else {
-    await sendCards(files, message);
+    // 슬랙 메시지로 복사하면 따옴표와 # 이 바뀔 수 있어서, 문구 원본을 텍스트 파일로도 함께 보낸다
+    await sendCards([...files, path.join(outDir, 'caption.txt')], message);
     log('슬랙으로 보냈습니다');
   }
 
