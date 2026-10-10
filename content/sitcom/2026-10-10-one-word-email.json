@@ -1,0 +1,57 @@
+{
+  "slug": "2026-10-10-one-word-email",
+  "banner": "AI SITCOM\\N이메일 써 줘 · One-Word Email",
+  "segments": [
+    {
+      "shots": [
+        {
+          "duration": 3,
+          "prompt": "Wide shot of the living room. The woman stands beside the sofa and says to the dog in a busy, friendly American voice: \"Aki, write an email to my boss.\"",
+          "en": "Aki, write an email to my boss.",
+          "ko": "아키, 상사한테 보낼 이메일 써 줘."
+        },
+        {
+          "duration": 3,
+          "prompt": "Close-up of the Shiba Inu sitting behind the laptop. Deadpan face, one small confident nod. The dog says in a calm, deep, deadpan male voice: \"On it.\"",
+          "en": "On it.",
+          "ko": "맡겨 줘."
+        },
+        {
+          "duration": 4,
+          "prompt": "Medium shot of the woman leaning toward the laptop screen, eyebrows rising in disbelief. She says: \"That's... one word?\"",
+          "en": "That's... one word?",
+          "ko": "이게... 한 단어야?"
+        },
+        {
+          "duration": 5,
+          "prompt": "Close-up of the Shiba Inu, perfectly calm, mouth moving as it speaks in the same deep deadpan voice: \"You said write an email. You didn't say what's in it.\" Then a live studio audience bursts into laughter.",
+          "en": "You said write an email.\\NYou didn't say what's in it.",
+          "ko": "이메일 쓰라며.\\N내용은 말 안 했잖아."
+        }
+      ]
+    },
+    {
+      "shots": [
+        {
+          "duration": 6,
+          "prompt": "Medium shot of the woman. She sighs, then speaks slowly and clearly to the dog: \"Write a polite three-sentence email asking to move Friday's meeting to Monday.\" The dog listens, still.",
+          "en": "Write a polite three-sentence email\\Nasking to move Friday's meeting to Monday.",
+          "ko": "금요일 회의를 월요일로 옮기자는\\N정중한 세 문장 이메일 써 줘."
+        },
+        {
+          "duration": 4,
+          "prompt": "The woman reads the laptop screen and her face relaxes into a relieved smile. She says softly: \"...That's perfect.\"",
+          "en": "...That's perfect.",
+          "ko": "...완벽한데."
+        },
+        {
+          "duration": 5,
+          "prompt": "Close-up of the Shiba Inu turning to look straight into the camera, deadpan. The dog says in the same deep calm voice: \"I accept payment in treats.\" Then the live studio audience laughs and applauds.",
+          "en": "I accept payment in treats.",
+          "ko": "보수는 간식으로 받을게."
+        }
+      ]
+    }
+  ],
+  "caption": "🐶 AI에게 \"이메일 써 줘\"라고만 하면 생기는 일\n\nAI는 말한 만큼만 해요. 누구에게, 무슨 내용을, 몇 문장으로, 어떤 말투로 쓸지 알려 주면 한 번에 원하는 답이 나와요.\n\n💡 이렇게 말해 보세요\n\"금요일 회의를 월요일로 옮기자는 정중한 세 문장 이메일을 상사에게 써 줘\"\n\n여러분은 AI한테 짧게 말하는 편 🙋 vs 자세히 말하는 편 📝 댓글로!\n\n#AI시트콤 #프롬프트 #AIsitcom\n\n—————\n\n🐶 What happens when you just tell AI \"write an email\"\n\nAI does exactly what you say, nothing more. Tell it who it's for, what it should say, how long, and in what tone, and you'll get it right the first time.\n\n💡 Try this\n\"Write a polite three-sentence email to my boss asking to move Friday's meeting to Monday.\"\n\nDo you keep your prompts short 🙋 or detailed 📝? Tell us in the comments!"
+}

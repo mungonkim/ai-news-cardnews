@@ -39,8 +39,8 @@ const generateOne = async (prompt: string, size: string): Promise<Buffer> => {
   return Buffer.from(b64, 'base64');
 };
 
-// 한 번 실패하면 한 번 더 시도한다
-const generateWithRetry = async (prompt: string, size: string): Promise<Buffer> => {
+// 한 번 실패하면 한 번 더 시도한다 (시트콤 캐릭터 이미지에서도 쓴다)
+export const generateWithRetry = async (prompt: string, size: string): Promise<Buffer> => {
   try {
     return await generateOne(prompt, size);
   } catch (error) {

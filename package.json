@@ -6,6 +6,7 @@
     "collect": "node src/pipeline/collect.ts",
     "render": "node src/render.ts",
     "reel": "node src/reel.ts",
+    "sitcom": "node src/sitcom/run.ts",
     "typecheck": "tsc",
     "start:local": "node --env-file=.env src/run.ts",
     "clean": "node src/clean.ts"
