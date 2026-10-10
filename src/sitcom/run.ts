@@ -28,8 +28,8 @@ const STYLE = `Look: 1990s sitcom on film, warm color, soft studio lighting, sli
 const BASE_IMAGE_PROMPT = `Vertical photo, a wide straight-on shot from a 1990s American multi-camera sitcom. ${SET} ${CAST} The Shiba Inu sits on the sofa behind the open laptop, looking calm. The woman stands beside the sofa, turned toward the dog. Warm 1990s film color, slight grain, soft studio lighting. No text, no logos, no watermark.`;
 
 type Shot = SubtitleShot & { prompt: string };
-// banner: 영상 위쪽에 고정되는 그 편의 제목 (예: "이메일 써 줘 · One-Word Email"). "AI SITCOM" 같은 시리즈 글자는 넣지 않는다
-type Episode = { slug: string; banner: string; segments: { shots: Shot[] }[]; caption: string };
+// banner: 영상 위쪽 제목. 기본은 넣지 않는다 (사용자 결정, 2026-10-10). 필요할 때만 적는다
+type Episode = { slug: string; banner?: string; segments: { shots: Shot[] }[]; caption: string };
 
 const log = (message: string): void => console.log(`[${new Date().toLocaleTimeString('ko-KR')}] ${message}`);
 const flag = (name: string): boolean => process.argv.includes(name);
@@ -116,7 +116,7 @@ const run = async (): Promise<void> => {
   log('편집하는 중 (자막, 배너)');
   const finalFile = await editSitcom(
     episode.segments.map((segment, i) => ({ file: files[i], shots: segment.shots })),
-    episode.banner,
+    episode.banner ?? '',
     outDir,
     'final.mp4',
   );

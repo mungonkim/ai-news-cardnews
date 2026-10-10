@@ -72,7 +72,8 @@ Style: Ko,${FONT},50,&H0000E5FF,&H0000E5FF,&H00000000,&H80000000,1,0,0,0,100,100
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 `;
-  const events = [`Dialogue: 0,${assTime(0)},${assTime(total)},Banner,,0,0,0,,${assText(banner)}`];
+  // 제목은 넣지 않는 것이 기본이다 (사용자 결정). 값이 있을 때만 위쪽에 띄운다
+  const events = banner ? [`Dialogue: 0,${assTime(0)},${assTime(total)},Banner,,0,0,0,,${assText(banner)}`] : [];
   for (const line of lines) {
     if (line.en) events.push(`Dialogue: 0,${assTime(line.start)},${assTime(line.end)},En,,0,0,0,,${assText(line.en)}`);
     if (line.ko) events.push(`Dialogue: 0,${assTime(line.start)},${assTime(line.end)},Ko,,0,0,0,,${assText(line.ko)}`);
