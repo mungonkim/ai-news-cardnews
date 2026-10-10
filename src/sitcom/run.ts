@@ -68,10 +68,15 @@ const run = async (): Promise<void> => {
   const outDir = path.join(ROOT, 'output', 'sitcom', episode.slug);
   await mkdir(outDir, { recursive: true });
 
+  // 이미 만든 구간 영상이 폴더에 있으면 다시 만들지 않는다 (편집만 다시 할 때 비용이 들지 않는다)
+  const segmentNames = episode.segments.map((_, i) => `segment${i + 1}.mp4`);
+  const existing = await Promise.all(segmentNames.map((name) => exists(path.join(outDir, name))));
+  const needsGeneration = existing.some((found) => !found);
+
   // 1. 기준 장면 이미지 (처음 한 번만 만든다)
-  const createdBase = await ensureBaseImage();
-  const imageUrl = await uploadFile(await readFile(BASE_IMAGE), 'image/png');
-  log('기준 장면 이미지를 올렸습니다');
+  const createdBase = needsGeneration ? await ensureBaseImage() : false;
+  const imageUrl = needsGeneration ? await uploadFile(await readFile(BASE_IMAGE), 'image/png') : '';
+  if (needsGeneration) log('기준 장면 이미지를 올렸습니다');
 
   // 2. 구간별 영상: 한 요청에 컷 여러 개(최대 6개, 15초)를 담아 동시에 만든다
   const bodies = episode.segments.map((segment) => {
@@ -87,14 +92,20 @@ const run = async (): Promise<void> => {
       duration: segment.shots.reduce((sum, shot) => sum + shot.duration, 0),
     };
   });
-  for (const [i, body] of bodies.entries()) log(`구간 ${i + 1} 예상 비용: ${await estimate(VIDEO_ENDPOINT, body)}`);
+  for (const [i, body] of bodies.entries()) {
+    if (!existing[i]) log(`구간 ${i + 1} 예상 비용: ${await estimate(VIDEO_ENDPOINT, body)}`);
+  }
 
   const files = await Promise.all(
     bodies.map(async (body, i) => {
+      if (existing[i]) {
+        log(`구간 ${i + 1}: 이미 만든 영상을 그대로 씁니다`);
+        return segmentNames[i];
+      }
       log(`구간 ${i + 1} 영상을 만드는 중 (${body.duration}초)`);
       const result = await generate(VIDEO_ENDPOINT, body, (message) => log(`구간 ${i + 1}: ${message}`));
       if (!result.video?.url) throw new Error(`구간 ${i + 1} 결과에 영상 주소가 없습니다: ${JSON.stringify(result).slice(0, 200)}`);
-      const name = `segment${i + 1}.mp4`;
+      const name = segmentNames[i];
       await writeFile(path.join(outDir, name), await download(result.video.url));
       log(`구간 ${i + 1} 완료`);
       return name;

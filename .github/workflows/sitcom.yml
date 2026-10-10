@@ -11,9 +11,14 @@ on:
         description: '대본 JSON 경로 (비우면 아직 안 만든 다음 대본, 예: content/sitcom/2026-10-12-diet-starts-today.json)'
         required: false
         default: ''
+      from_run:
+        description: '편집만 다시 할 때: 이전 실행 번호(run id). 그 실행의 구간 영상을 가져와 새로 만들지 않는다 (3일 안의 실행만)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: sitcom
@@ -37,6 +42,15 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg fonts-noto-cjk
+
+      - name: 이전 실행의 구간 영상 가져오기 (편집만 다시 할 때)
+        if: github.event.inputs.from_run != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: sitcom-output
+          path: output/sitcom
+          run-id: ${{ github.event.inputs.from_run }}
+          github-token: ${{ github.token }}
 
       - name: 시트콤 만들기
         env:

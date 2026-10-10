@@ -8,9 +8,12 @@ const FFMPEG = process.env.FFMPEG_PATH ?? 'ffmpeg';
 const FFPROBE = process.env.FFPROBE_PATH ?? 'ffprobe';
 const WIDTH = 1080;
 const HEIGHT = 1920;
-// 위쪽 배너 높이 (영상은 그 아래에 놓인다)
-const BANNER_HEIGHT = 200;
 const FONT = 'Noto Sans CJK KR';
+// 안전 구역: 프로필 격자는 릴스를 3:4로 잘라 위아래 약 240px을 가리고, 재생 화면은 아래쪽에 캡션과 버튼이 겹친다.
+// 그래서 제목은 위에서 280px 아래에, 자막은 아래에서 460px 위에 둔다 (y 약 280~1460 안에 글자가 들어간다)
+const BANNER_TOP = 280;
+const KO_BOTTOM = 460;
+const EN_BOTTOM = 580;
 
 export type SubtitleShot = { duration: number; en?: string; ko?: string };
 export type EditSegment = { file: string; shots: SubtitleShot[] };
@@ -62,9 +65,9 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Banner,${FONT},56,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,0,0,8,60,60,70,1
-Style: En,${FONT},50,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,1,0,0,0,100,100,0,0,1,4,1,2,70,70,330,1
-Style: Ko,${FONT},50,&H0000E5FF,&H0000E5FF,&H00000000,&H80000000,1,0,0,0,100,100,0,0,1,4,1,2,70,70,210,1
+Style: Banner,${FONT},54,&H00FFFFFF,&H00FFFFFF,&H55000000,&H55000000,1,0,0,0,100,100,0,0,3,16,0,8,60,60,${BANNER_TOP},1
+Style: En,${FONT},50,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,1,0,0,0,100,100,0,0,1,4,1,2,70,70,${EN_BOTTOM},1
+Style: Ko,${FONT},50,&H0000E5FF,&H0000E5FF,&H00000000,&H80000000,1,0,0,0,100,100,0,0,1,4,1,2,70,70,${KO_BOTTOM},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -97,14 +100,14 @@ export const editSitcom = async (segments: EditSegment[], banner: string, workDi
   });
   await writeFile(path.join(workDir, 'subs.ass'), buildAss(banner, offset, lines));
 
-  // 각 구간: 가로 1080에 맞추고 배너 아래에 놓는다. 소리가 없는 구간은 무음을 채운다
+  // 각 구간: 가로 1080에 맞춰 화면 가운데에 놓는다 (제목은 영상 위에 반투명 띠로 얹는다). 소리가 없는 구간은 무음을 채운다
   const inputs: string[] = [];
   const filters: string[] = [];
   const concatInputs: string[] = [];
   for (const segment of segments) inputs.push('-i', segment.file);
   segments.forEach((_, i) => {
     filters.push(
-      `[${i}:v]scale=${WIDTH}:${HEIGHT - BANNER_HEIGHT}:force_original_aspect_ratio=decrease,pad=${WIDTH}:${HEIGHT}:(ow-iw)/2:${BANNER_HEIGHT}:black,setsar=1,fps=30,format=yuv420p[v${i}]`,
+      `[${i}:v]scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=decrease,pad=${WIDTH}:${HEIGHT}:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30,format=yuv420p[v${i}]`,
     );
     if (probes[i].hasAudio) {
       filters.push(`[${i}:a]aresample=48000,aformat=channel_layouts=stereo[a${i}]`);
