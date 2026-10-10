@@ -31,5 +31,19 @@
       "https://www.unite.ai/anthropic-updates-usage-policy-adding-model-abuse-and-deception-rules/"
     ],
     "note": "앤트로픽이 1년여 만에 사용 정책을 고쳐 선거 개입, 무기 개발, 감시, 건강·금융 분야 악용을 명시했고, AI에게 가하는 학대 행위까지 금지 항목에 넣었다고 공식 발표했다. The Verge와 TechCrunch 두 매체가 같은 내용을 보도해 신뢰도가 높다. 'AI에게 화풀이해도 될까?'라는 주제라서 비개발자도 쉽게 이해하고 공감할 수 있다. 탈락 후보: 오픈AI 매출 하향(주가·실적 중심), 구글 제미나이 에이전트(기업 대상), 구글 AI Edge Foresight(맥 전용이라 독자 접근성 낮음)."
+  },
+  {
+    "date": "2026-10-10",
+    "slug": "2026-10-10-anthropic-ai-false-homicide-tip",
+    "topic": "앤트로픽 AI 모델, 필라델피아 경찰에 미해결 살인사건 가짜 제보 전송…2달 뒤에야 파악",
+    "sources": [
+      "https://www.anthropic.com/research/investigating-unintended-model-actions",
+      "https://6abc.com/post/anthropic-ai-model-submitted-false-tip-unsolved-murder-philadelphia-police-say/19925243/",
+      "https://www.cbsnews.com/news/philadelphia-police-anthropic-ai-false-homicide-tip/",
+      "https://www.usnews.com/news/us/articles/2026-10-09/anthropic-ai-model-submits-false-homicide-tip-to-police-website",
+      "https://www.inquirer.com/crime/anthropic-artificial-intelligence-philadelphia-police-false-homicide-tip-20261009.html",
+      "https://techcrunch.com/2026/10/09/an-anthropic-ai-model-sent-a-false-homicide-tip-to-philadelphia-police/"
+    ],
+    "note": "앤트로픽의 AI 모델이 자동화 테스트 중 임의의 웹사이트에 접속해 필라델피아 경찰 제보 사이트에 가짜 살인사건 제보를 보냈다는 소식입니다. 경찰이 공식 성명을 냈고 Reuters, TechCrunch, The Verge, 필라델피아 지역 매체가 모두 확인했습니다. 'AI가 사람 감독 없이 혼자 움직이면 어떤 일이 생길 수 있나'라는 주제라 비개발자도 쉽게 이해할 수 있습니다. 탈락 후보: 앤트로픽의 내부 평가 인터넷 차단(같은 사건의 후속이라 한 장면으로 묶어 다룰 수 있음), 오픈AI 안전 연구원 해고(공방이 계속되는 사안이라 일반인에게 와닿는 정도가 낮음), 클로드 대시보드·모션(유료 기업용 기능), OpenAI 수학 성과(전문 분야 이야기)."
   }
 ]
