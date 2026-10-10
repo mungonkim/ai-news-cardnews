@@ -10,8 +10,6 @@ const BRAND = 'AI랑 친해지기';
 const ACCOUNT_HANDLE = '@ai_chingu';
 // 게시물 문구의 해시태그 최대 개수 (참고 계정들은 거의 쓰지 않는다)
 const MAX_HASHTAGS = 3;
-// AI로 만든 이미지를 쓴 게시물에 붙이는 안내
-export const AI_IMAGE_NOTE = '※ 카드 속 이미지는 AI로 생성했어요. (Images are AI-generated.)';
 
 // 해시태그를 앞에서부터 limit개만 남기고 나머지는 지운다
 export const limitHashtags = (caption: string, limit: number): string => {
@@ -21,12 +19,6 @@ export const limitHashtags = (caption: string, limit: number): string => {
     .replace(/[ \t]+$/gm, '')
     .replace(/\n{3,}/g, '\n\n');
 };
-
-// 계정 아이디 바로 위에 안내 문구를 넣는다
-export const addCaptionNote = (caption: string, note: string): string =>
-  caption.endsWith(ACCOUNT_HANDLE)
-    ? `${caption.slice(0, -ACCOUNT_HANDLE.length).trimEnd()}\n\n${note}\n\n${ACCOUNT_HANDLE}`
-    : `${caption.trimEnd()}\n\n${note}`;
 
 type CoveredArticle = { date: string; slug: string; topic: string; sources: string[] };
 
@@ -171,7 +163,7 @@ const WRITE_SYSTEM = `너는 "AI랑 친해지기" 인스타그램 카드뉴스 �
 - 한국어 부분: 첫 줄은 시선을 끄는 한 줄(이모지 1개 허용), 핵심 3줄 요약, 독자 행동 유도("댓글 남겨 주시면 원문 링크·용어 정리·바로 해 보기 방법을 DM으로 보내드려요"처럼 마지막 장 offer와 같은 자료를 약속, 그리고 팔로우), 출처 한 줄, 해시태그 3개 이내.
 - 그 아래에 빈 줄과 "—————" 구분선을 넣고, 같은 내용을 외국인 독자를 위해 영어로 쓴다 (Hook 한 줄, 핵심 3줄 요약, 댓글 · 팔로우 유도, Source 한 줄). **영어 부분에는 해시태그를 쓰지 않는다**(한국어 부분과 중복하지 않는다). 한국어 부분을 직역하지 말고 자연스러운 영어로, 용어는 쉽게 풀어 써.
 - 전체 길이는 한국어와 영어를 합쳐 1800자 이내. 해시태그는 한국어 부분 끝에만 **최대 3개**(예: #AI뉴스 #주제어 #AINews). 많이 붙이지 않는다(코드가 3개 넘는 태그는 지운다).
-- 개인정보는 넣지 마. 마지막 줄의 우리 계정 아이디(@ai_chingu)와 AI 생성 이미지 안내는 코드가 붙이니 직접 쓰지 마.
+- 개인정보는 넣지 마. 마지막 줄의 우리 계정 아이디(@ai_chingu)는 코드가 붙이니 직접 쓰지 마.
 
 [출력] 설명 없이 아래 JSON만 코드 블록으로 출력해.
 {

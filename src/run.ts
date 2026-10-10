@@ -9,7 +9,7 @@ import path from 'node:path';
 import { collectCandidates } from './pipeline/collect.ts';
 import { generateImages } from './pipeline/images.ts';
 import { sendCards, sendText } from './pipeline/slack.ts';
-import { AI_IMAGE_NOTE, addCaptionNote, selectArticle, verifyArticle, writeCard } from './pipeline/steps.ts';
+import { selectArticle, verifyArticle, writeCard } from './pipeline/steps.ts';
 import { makeReel } from './reel.ts';
 import { renderCard } from './render.ts';
 
@@ -73,10 +73,8 @@ const run = async (): Promise<void> => {
     for (const [index, file] of generated) {
       const slide = written.card.slides[index];
       // 이미지를 넣을 수 있는 장 종류에만 붙인다 (요약, 마지막 장 제외)
-      // AI로 만든 이미지는 카드에도 "AI 생성 이미지"라고 작게 표기한다
-      if (['cover', 'step', 'point', 'term', 'meaning'].includes(slide.type)) Object.assign(slide, { image: file, imageCredit: 'AI 생성 이미지' });
+      if (['cover', 'step', 'point', 'term', 'meaning'].includes(slide.type)) Object.assign(slide, { image: file });
     }
-    if (generated.size > 0) written.caption = addCaptionNote(written.caption, AI_IMAGE_NOTE);
   }
   await writeFile(path.join(outDir, 'card.json'), JSON.stringify(written.card, null, 2));
 
