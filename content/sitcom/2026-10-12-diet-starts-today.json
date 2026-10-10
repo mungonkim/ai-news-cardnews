@@ -39,7 +39,7 @@
       "shots": [
         {
           "duration": 4,
-          "prompt": "Late at night, the living room lit only by the orange floor lamp. The woman tiptoes quietly toward the cookie jar on the TV cabinet. No dialogue.",
+          "prompt": "Late at night, the living room lit only by the orange floor lamp. The woman tiptoes quietly toward the cookie jar on the TV cabinet. No dialogue. A short upbeat 1990s sitcom slap-bass transition riff plays at the start of this shot, then fades to silence.",
           "en": "",
           "ko": ""
         },
@@ -66,7 +66,13 @@
     {
       "shots": [
         {
-          "duration": 4,
+          "duration": 2,
+          "prompt": "Morning sunlight streams through the curtains into the empty living room. No people speak. A short upbeat 1990s sitcom slap-bass transition riff plays.",
+          "en": "",
+          "ko": ""
+        },
+        {
+          "duration": 3,
           "prompt": "Next morning, bright daylight. The woman sits on the sofa and points at the dog: \"Fine. Then you're on a diet too.\"",
           "en": "Fine. Then you're on a diet too.",
           "ko": "좋아. 그럼 너도 다이어트야."
@@ -78,7 +84,7 @@
           "ko": "사랑은 그런 게 아니야."
         },
         {
-          "duration": 4,
+          "duration": 3,
           "prompt": "The woman places a single small carrot on the coffee table in front of the dog and says cheerfully: \"One carrot. Healthy.\"",
           "en": "One carrot. Healthy.",
           "ko": "당근 하나. 건강식."
@@ -94,13 +100,19 @@
     {
       "shots": [
         {
-          "duration": 5,
+          "duration": 2,
+          "prompt": "Evening, the floor lamp glows warmly in the empty living room. No people speak. A short upbeat 1990s sitcom slap-bass transition riff plays.",
+          "en": "",
+          "ko": ""
+        },
+        {
+          "duration": 4,
           "prompt": "Evening. The woman on the sofa holds a cordless phone, giving in: \"Okay. I'll just order one small salad.\"",
           "en": "Okay. I'll just order one small salad.",
           "ko": "알았어. 샐러드 작은 거 하나만 시킬게."
         },
         {
-          "duration": 4,
+          "duration": 3,
           "prompt": "Close-up of the Shiba Inu, deadpan. The dog says in the deep voice: \"Add extra fries. For me.\" Then its mouth closes.",
           "en": "Add extra fries. For me.",
           "ko": "감자튀김 추가. 내 거."
@@ -113,7 +125,7 @@
         },
         {
           "duration": 3,
-          "prompt": "Wide shot. The woman and the dog sit side by side on the sofa looking satisfied, mouths closed. The live studio audience laughs and applauds. No dialogue.",
+          "prompt": "Wide shot. The woman and the dog sit side by side on the sofa looking satisfied, mouths closed. The live studio audience laughs and applauds, then a short upbeat 1990s sitcom slap-bass outro riff plays. No dialogue.",
           "en": "",
           "ko": ""
         }
