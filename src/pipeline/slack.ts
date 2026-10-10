@@ -49,7 +49,10 @@ export const sendCards = async (files: string[], message: string): Promise<void>
   const ids: string[] = [];
   for (const file of files) ids.push(await uploadFile(token, file));
   await callSlack('files.completeUploadExternal', token, {
-    files: ids.map((id, i) => ({ id, title: files[i].endsWith('.txt') ? '게시물 문구 원본 (여기서 복사)' : `카드 ${i + 1}` })),
+    files: ids.map((id, i) => ({
+      id,
+      title: files[i].endsWith('dm.txt') ? 'DM 자료 (댓글 단 분께 보내기)' : files[i].endsWith('.txt') ? '게시물 문구 원본 (여기서 복사)' : files[i].endsWith('.mp4') ? '릴스 영상 (음악은 앱에서 추가)' : `카드 ${i + 1}`,
+    })),
     channel_id: channel,
     initial_comment: message,
   });

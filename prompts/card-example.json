@@ -1,72 +1,68 @@
 {
-  "slug": "2026-10-09-gpt6-intelligent-ui",
+  "slug": "2026-10-09-google-synthid-detector-public",
   "brand": "AI랑 친해지기",
+  "theme": "light",
+  "palette": "violet",
   "slides": [
     {
       "type": "cover",
-      "tag": "AI NEWS | ChatGPT",
-      "title": "ChatGPT가\n**계산기까지**\n만들어 줘요",
-      "subtitle": "글로만 답하던 AI가\n눌러 쓰는 화면으로 바뀌었어요",
-      "image": "2026-10-09-gpt6-intelligent-ui.cover.png"
+      "tag": "AI NEWS | 구글 신스ID",
+      "title": "AI 파일,\n**누구나**\n확인해요",
+      "subtitle": "구글이 신스ID 디텍터를\n전 세계에 열었어요"
     },
     {
-      "type": "point",
-      "label": "무슨 일이야?",
-      "title": "ChatGPT 답이\n달라졌어요",
-      "body": "OpenAI가 **GPT-6**와 **Intelligent UI**를 공개했어요. 이제 ChatGPT는 글만이 아니라 **그림, 차트, 버튼**이 들어 있는 답도 줄 수 있어요.",
-      "visual": {
-        "kind": "chat",
-        "messages": [
-          {
-            "role": "user",
-            "text": "5명이서 밥값 나눠 내는 계산기 만들어 줘"
-          },
-          {
-            "role": "ai",
-            "text": "좋아요! 금액과 인원을 넣으면 1인당 얼마인지 바로 계산해 드릴게요."
-          }
-        ],
-        "note": "※ 공식 발표의 '더치페이 계산기' 예시를 바탕으로 꾸민 가상의 대화예요"
-      }
+      "type": "brief",
+      "title": "AI가 만든 파일인지\n이제 **직접** 확인해요",
+      "lines": [
+        "구글이 **신스ID 디텍터**를 전 세계에 열었어요",
+        "이미지·영상·음성 파일을 **올리기만** 하면 돼요",
+        "구글과 파트너사 AI로 만든 파일이 대상이에요"
+      ]
     },
     {
-      "type": "point",
-      "label": "뭐가 달라졌어?",
-      "title": "글 대신\n눌러 보는 답",
-      "body": "그림이나 차트를 **눌러 보면서** 원리를 익힐 수 있고, 게임이나 계산기 같은 **도구를 바로 만들어** 쓸 수 있어요.",
-      "image": "2026-10-09-gpt6-intelligent-ui.slide3.png",
-      "imagePosition": "bottom"
+      "type": "step",
+      "title": "파일만 올리면 끝",
+      "body": "**synthid.com**에 파일을 올리면 AI로 만들었는지 알려 줘요. 10월 7일부터 **누구나** 쓸 수 있어요."
+    },
+    {
+      "type": "step",
+      "title": "전문가용에서\n모두의 도구로",
+      "body": "지난해에는 **언론 전문가**용 초기 버전만 있었어요. 지금은 일반인도 쓸 수 있고, 지원 언어는 **영어**뿐이에요."
+    },
+    {
+      "type": "step",
+      "title": "확인할 수 있는 범위",
+      "body": "구글과 파트너사(**오픈AI, 엔비디아, 카카오**) AI로 만든 파일이 확인 대상이에요. 애플도 곧 추가돼요."
     },
     {
       "type": "term",
-      "term": "UI",
-      "english": "User Interface · 사용자 화면",
-      "heading": "내가 **보고 누르는** 화면",
-      "body": "앱에서 버튼, 입력창, 그래프처럼 우리가 보고 누르는 부분이에요. **Intelligent UI**는 AI가 질문에 맞는 화면을 **그때그때 만들어 준다**는 뜻이에요."
+      "term": "신스ID",
+      "english": "SynthID",
+      "heading": "AI가 남긴 **숨은 표시**",
+      "body": "AI가 만든 사진·영상·소리에 눈과 귀로는 알 수 없는 **워터마크**를 넣는 기술이에요.",
+      "example": "지폐를 불빛에 비추면 보이는 **위조 방지 무늬**와 비슷해요."
     },
     {
       "type": "meaning",
       "title": "이렇게 써 보세요",
       "items": [
-        "**무료 사용자**도 10월 8일부터 순차적으로 써 볼 수 있어요",
-        "계산기나 간단한 게임을 **말로 주문**해 보세요",
-        "계산 결과는 **한 번 더** 확인하세요"
-      ],
-      "image": "2026-10-09-gpt6-intelligent-ui.slide5.png"
-    },
-    {
-      "type": "summary",
-      "title": "AI가 이제\n**글 대신 도구**로\n답해요",
-      "caption": "내 계정에는 차례로 적용돼서, 아직 안 보여도 조금 기다려 보세요."
+        "수상한 사진은 **synthid.com**에 올려 보세요",
+        "**구글 검색·제미나이·크롬**에서도 확인할 수 있어요",
+        "표시가 없다고 **진짜 사진**이라는 뜻은 아니에요"
+      ]
     },
     {
       "type": "outro",
-      "cta": "써 보신 분은\n**댓글**로 알려 주세요",
-      "sub": "**팔로우**하고\n다음 AI 소식도 받아보세요",
+      "cta": "댓글 남기면\n**DM**으로 보내드려요",
+      "offer": [
+        "원문 링크 모음",
+        "쉬운 용어 정리",
+        "바로 해 보기 방법"
+      ],
+      "sub": "**팔로우**하고 매일 쉬운 AI 소식 받기",
       "sources": [
-        "OpenAI, GPT-6 and Intelligent UI in ChatGPT (2026.10.7)"
+        "Google 공식 블로그 (2026.10.7)"
       ]
     }
-  ],
-  "theme": "light"
+  ]
 }

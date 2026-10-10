@@ -11,8 +11,9 @@ GitHub Actions (매일 08:00 KST)
  4. Claude가 카드 7장 + 게시물 문구 + 이미지 장면 작성
  5. 이미지 API로 표지와 중간 장 이미지 생성 (src/pipeline/images.ts)
  6. HTML 템플릿 → Chromium → PNG 1080x1440 (인스타 격자 3:4) (src/render.ts, templates.ts)
- 7. 슬랙으로 카드 + 게시물 문구 + 출처 전송, 오류도 슬랙으로 알림
- 8. 다룬 기사 기록(data/covered-articles.json)으로 중복 방지
+ 7. (선택, --reel) 카드를 차례로 넘기는 릴스용 세로 영상(1080x1920) 생성 (src/reel.ts, ffmpeg 필요). 기본은 끔
+ 8. 슬랙으로 카드 + 릴스 영상 + 게시물 문구 + 출처 전송, 오류도 슬랙으로 알림
+ 9. 다룬 기사 기록(data/covered-articles.json)으로 중복 방지
 ```
 
 ## 필요한 비밀키 (GitHub Secrets에만 넣는다. 코드나 채팅에 적지 않는다)
@@ -31,6 +32,7 @@ npm run start:local -- --no-slack            # 폴더에만 저장
 npm run start:local -- --url <기사 주소>       # 특정 기사로 만들기
 npm run start:local -- --no-images --no-slack  # 이미지 API 없이 구조만 확인
 npm run collect                               # RSS 후보만 확인
+npm run reel -- output/<폴더>/cards           # 이미 만든 카드로 릴스 영상만 다시 만들기
 npm run typecheck
 ```
 결과는 `output/<날짜-이름>/`에 `cards/`(PNG), `caption.txt`, `report.md`, `card.json`으로 저장된다.
@@ -44,4 +46,6 @@ npm run typecheck
 
 ## 규칙
 - 확인된 사실만 카드에 쓴다. 기사 문장과 이미지는 그대로 쓰지 않는다.
+- AI 이미지에는 실존 인물과 로고를 그리지 않고, 카드와 게시물 문구에 "AI 생성 이미지"를 표기한다. 실제 인물 사진이 필요하면 사람이 골라 넣고 출처를 적는다.
+- 해시태그는 3개 이내 (코드가 넘는 태그를 지운다).
 - 개인정보와 비밀키는 저장소에 넣지 않는다.

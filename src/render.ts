@@ -55,7 +55,10 @@ export const renderCard = async (
     const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT } });
 
     // 사진 경로를 먼저 모두 처리해 두고, 마지막 장이 표지 배경을 다시 쓸 수 있게 한다
-    const slides = await Promise.all(content.slides.map((s) => resolveSlide(s, baseDir)));
+    const resolved = await Promise.all(content.slides.map((s) => resolveSlide(s, baseDir)));
+    // 포인트(step) 장에 1, 2, 3… 번호를 차례로 붙인다
+    let stepCount = 0;
+    const slides = resolved.map((s) => (s.type === 'step' ? { ...s, number: s.number ?? ++stepCount } : s));
     const cover = slides.find((s): s is Extract<Slide, { type: 'cover' }> => s.type === 'cover');
 
     for (const [index, slide] of slides.entries()) {

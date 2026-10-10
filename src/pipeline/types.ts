@@ -44,5 +44,7 @@ export type ImageRequest = {
 export type WrittenCard = {
   card: CardContent;
   caption: string;
+  // 댓글을 남긴 사람에게 DM으로 보낼 자료 글
+  dm: string;
   images: ImageRequest[];
 };

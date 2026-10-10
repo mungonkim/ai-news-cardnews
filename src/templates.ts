@@ -36,10 +36,17 @@ export type Slide =
     }
   // bullets가 있으면 "위쪽 그림(이미지 또는 숫자 카드) + 라벨 + 한 문장 제목 + 불릿" 구조로 그린다
   | ({ type: 'point'; label: string; title: string; body?: string; bullets?: string[]; visual?: Visual } & ImageSlot)
-  | ({ type: 'term'; term: string; english: string; heading: string; body: string } & ImageSlot)
+  // 무슨 일이야?: 뉴스를 세 줄로 요약하는 장 (위쪽에 숫자 카드 같은 그림을 둘 수 있다)
+  | { type: 'brief'; label?: string; title: string; lines: string[]; visual?: Visual }
+  // 포인트 한 장 = 한 가지 이야기. 위쪽 이미지(또는 그림) + 번호 + 제목 한 줄 + 짧은 본문
+  // number는 렌더링할 때 순서대로 자동으로 붙는다
+  | ({ type: 'step'; title: string; body: string; visual?: Visual; number?: number } & ImageSlot)
+  // example: 일상 비유 한두 문장 ("쉽게 말하면" 상자로 표시)
+  | ({ type: 'term'; term: string; english: string; heading: string; body: string; example?: string } & ImageSlot)
   | ({ type: 'meaning'; title: string; items: string[] } & ImageSlot)
   | { type: 'summary'; title: string; caption: string }
-  | { type: 'outro'; cta: string; sub: string; sources: string[] };
+  // offer: 댓글을 남기면 DM으로 보내 주는 자료 목록 (있으면 마지막 장에 상자로 보여 준다)
+  | { type: 'outro'; cta: string; sub: string; sources: string[]; offer?: string[] };
 
 export type CardContent = {
   slug: string;
@@ -63,6 +70,15 @@ const PALETTE: Record<PaletteName, { tint: string; accent: string }> = {
   blue: { tint: '#a9c9ff', accent: '#2563eb' },
   orange: { tint: '#ffd0a1', accent: '#c97410' },
   green: { tint: '#a8e6c1', accent: '#178a4d' },
+};
+
+// 어두운 테마에서 쓰는 강조 색 (어두운 배경에서 잘 읽히는 밝은 색)
+const DARK_ACCENT: Record<PaletteName, string> = {
+  violet: '#a78bfa',
+  pink: '#f472b6',
+  blue: '#60a5fa',
+  orange: '#fb923c',
+  green: '#4ade80',
 };
 
 // HTML 특수문자를 막고, **강조** 표시를 형광펜 효과로 바꾼다
@@ -180,6 +196,27 @@ const renderBody = (slide: Slide): string => {
         <p class="body${slide.visual || slide.image ? ' compact' : ''}">${format(slide.body ?? '')}</p>
         ${position === 'bottom' ? renderImage(slide) : ''}`;
     }
+    case 'brief':
+      return `
+        <span class="label">${escapeHtml(slide.label ?? '무슨 일이야?')}</span>
+        <h2 class="title">${format(slide.title)}</h2>
+        ${slide.visual ? renderVisual(slide.visual) : ''}
+        <ul class="brief-lines">
+          ${slide.lines.map((line) => `<li><span class="check">✓</span><span>${format(line)}</span></li>`).join('')}
+        </ul>`;
+    case 'step': {
+      const number = `<span class="step-num">${slide.number ?? ''}</span>`;
+      const text = `
+        <div class="step-text">
+          ${number}
+          <h2 class="title step-title">${format(slide.title)}</h2>
+          <p class="body step-body">${format(slide.body)}</p>
+        </div>`;
+      if (slide.image) return text;
+      if (slide.visual) return `<div class="step-visual">${renderVisual(slide.visual)}</div>${text}`;
+      // 그림이 없는 장은 큰 번호로 빈 곳을 채운다
+      return `<div class="big-num">${String(slide.number ?? '').padStart(2, '0')}</div>${text}`;
+    }
     case 'term': {
       const position = slide.imagePosition ?? 'middle';
       return `
@@ -191,6 +228,7 @@ const renderBody = (slide: Slide): string => {
         ${position === 'middle' ? renderImage(slide) : ''}
         <h2 class="title small">${format(slide.heading)}</h2>
         <p class="body">${format(slide.body)}</p>
+        ${slide.example ? `<div class="example"><span class="example-label">쉽게 말하면</span><p>${format(slide.example)}</p></div>` : ''}
         ${position === 'bottom' ? renderImage(slide) : ''}`;
     }
     case 'meaning': {
@@ -213,6 +251,11 @@ const renderBody = (slide: Slide): string => {
       return `
         <div class="brand-circle"><span>AI랑<br />친해지기</span></div>
         <h2 class="outro-title">${format(slide.cta)}</h2>
+        ${
+          slide.offer && slide.offer.length > 0
+            ? `<ul class="offer">${slide.offer.map((item) => `<li><span class="check">✓</span>${format(item)}</li>`).join('')}</ul>`
+            : ''
+        }
         <p class="outro-sub">${format(slide.sub)}</p>
         <div class="actions">
           <div class="action">
@@ -241,6 +284,7 @@ const styles = `
     --box-border: rgba(255,255,255,0.12);
     --bubble-ai: rgba(255,255,255,0.1);
     --gradient: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+    --on-accent: #0b0b12;
   }
   /* 밝은 테마: 흰 배경, 어두운 글자. 강조 색과 상단 그라데이션 색은 장마다 바뀐다 */
   body.light {
@@ -368,6 +412,64 @@ const styles = `
   .flow-step.last { border-color: rgba(244,114,182,0.7); background: rgba(236,72,153,0.12); }
   body.light .flow-step.last { border-color: var(--accent); background: #ffffff; }
   .flow-arrow { font-size: 44px; color: var(--pink); }
+
+  /* ===== 새 내용 장 레이아웃 (v2): 위에서부터 채우는 구성. 색은 dk(어두운) 또는 light(밝은) ===== */
+  body.dk { --bg: #0b0b12; --text: #f5f5f7; --body: #d4d4e0; --muted: #9a9aae; --box-bg: rgba(255,255,255,0.05); --box-border: rgba(255,255,255,0.1); --indigo: var(--accent); --pink: var(--accent); }
+  .glow-accent { position: absolute; top: -360px; left: 50%; transform: translateX(-50%); width: 1400px; height: 900px; z-index: 0;
+    background: radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 26%, transparent) 0%, transparent 62%); }
+  body.dk .hl, body.dk .title .hl, body.dk .summary-title .hl { background: none; color: var(--accent); -webkit-text-fill-color: var(--accent); font-weight: 800; padding: 0; }
+  body.v2 .content.v2top { justify-content: flex-start; padding-top: 72px; gap: 44px; }
+  body.v2 .label { font-size: 34px; color: var(--accent); }
+  body.v2 .title { font-size: 88px; line-height: 1.24; }
+  body.v2 .title.small { font-size: 66px; }
+  body.v2 .body { font-size: 46px; line-height: 1.62; color: var(--body); }
+  /* 무슨 일이야? */
+  .brief-lines { list-style: none; display: flex; flex-direction: column; gap: 26px; margin-top: 12px; }
+  .brief-lines li { display: flex; gap: 28px; align-items: flex-start; padding: 46px 44px; border-radius: 32px; background: var(--box-bg); border: 2px solid var(--box-border); font-size: 45px; line-height: 1.5; font-weight: 600; }
+  .check { flex: none; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: inline-flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 900; margin-top: 4px; }
+  /* 포인트(번호) 장 */
+  .hero { position: absolute; top: 0; left: 0; right: 0; height: 760px; z-index: 0; }
+  .hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero-fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,11,18,0.55) 0%, rgba(11,11,18,0) 20%, rgba(11,11,18,0) 58%, var(--bg) 100%); }
+  .hero-credit { position: absolute; right: 88px; top: 150px; font-size: 22px; color: rgba(255,255,255,0.85); text-shadow: 0 1px 8px rgba(0,0,0,0.5); }
+  body.hero-on .top { color: rgba(255,255,255,0.92); text-shadow: 0 2px 14px rgba(0,0,0,0.5); }
+  body.hero-on .top .page strong { color: #fff; }
+  body.v2 .content.step-img { justify-content: flex-start; padding-top: 640px; }
+  .step-text { display: flex; flex-direction: column; gap: 26px; }
+  .step-num { width: 76px; height: 76px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; }
+  body.v2 .title.step-title { font-size: 84px; }
+  .big-num { font-size: 420px; line-height: 0.85; font-weight: 900; letter-spacing: -0.05em; color: transparent; -webkit-text-stroke: 5px color-mix(in srgb, var(--accent) 75%, transparent); margin: 30px 0 70px; }
+  /* 큰 번호가 있으면 작은 번호 원은 숨긴다 */
+  .big-num + .step-text .step-num { display: none; }
+  .step-visual { margin-bottom: 20px; }
+  .step-visual .stat { padding: 90px 20px; }
+  .step-visual .slide-image img { height: 560px; }
+  /* 용어 풀이 */
+  body.v2 .term-box { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+  body.v2 .english { color: var(--accent); }
+  .example { padding: 36px 40px; border-radius: 28px; background: color-mix(in srgb, var(--accent) 12%, transparent); border-left: 8px solid var(--accent); }
+  .example-label { display: block; font-size: 30px; font-weight: 800; color: var(--accent); margin-bottom: 10px; }
+  .example p { font-size: 44px; line-height: 1.55; font-weight: 600; }
+  body.v2 .term-box { padding: 56px 56px; }
+  body.v2 .term { font-size: 104px; }
+  /* 나한테 무슨 의미? */
+  body.v2 .items { gap: 22px; }
+  body.v2 .items { gap: 26px; margin-top: 12px; }
+  body.v2 .items li { padding: 46px 44px; border-radius: 32px; background: var(--box-bg); border: 2px solid var(--box-border); font-size: 45px; }
+  body.v2 .items .num { background: var(--accent); color: var(--on-accent); }
+  /* 마지막 장의 DM 자료 상자 */
+  .offer { list-style: none; display: flex; flex-direction: column; gap: 16px; padding: 36px 44px; border-radius: 32px; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.18); text-align: left; }
+  .offer li { display: flex; gap: 20px; align-items: center; font-size: 38px; font-weight: 700; color: #f5f5f7; }
+  .offer .check { width: 46px; height: 46px; font-size: 26px; margin-top: 0; }
+  body.dk-outro .outro-title .hl { background: none; -webkit-text-fill-color: var(--accent); color: var(--accent); }
+  body.dk-outro .content.center { gap: 34px; }
+  body.dk-outro .brand-circle { width: 180px; height: 180px; font-size: 32px; }
+  body.dk-outro .action-icon { width: 104px; height: 104px; }
+  /* 밝은 색 (light + v2) */
+  body.light { --on-accent: #ffffff; }
+  body.light.v2 .brief-lines li, body.light.v2 .items li { background: #f6f6fb; border-color: #e6e7f0; box-shadow: 0 6px 24px rgba(20,20,40,0.05); }
+  body.light.v2 .term-box { background: #f6f6fb; }
+  body.light.v2 .example p { color: var(--text); }
 `;
 
 export const buildSlideHtml = (
@@ -385,25 +487,45 @@ export const buildSlideHtml = (
   const isOutro = slide.type === 'outro';
   // 밝은 테마는 표지와 마지막 장을 제외한 내용 장에만 적용한다
   const isLight = theme === 'light' && !isCover && !isOutro;
+  // 어두운 통일 테마: 내용 장은 같은 어두운 배경 + 한 가지 강조 색
+  const isDark = theme === 'dark' && !isCover && !isOutro;
+  // 새 레이아웃(v2)은 밝은 테마와 어두운 테마 모두에 쓴다
+  const isV2 = isLight || isDark;
+  const hero = isV2 && slide.type === 'step' && slide.image
+    ? `<div class="hero"><img src="${escapeHtml(slide.image)}" alt="" /><div class="hero-fade"></div>${slide.imageCredit ? `<span class="hero-credit">${escapeHtml(slide.imageCredit)}</span>` : ''}</div>`
+    : '';
   const palette = PALETTE[paletteName];
   // 마지막 장은 표지와 같은 배경을 어둡게 깔아 처음과 끝이 이어지게 한다
   const background = isCover
     ? renderCoverBackground(slide)
     : isOutro && cover
       ? renderCoverBackground(cover, true)
-      : isLight
-        ? '<div class="tint-top"></div>'
-        : '<div class="glow"></div>';
+      : hero
+        ? hero
+        : isLight
+          ? '<div class="tint-top"></div>'
+          : isDark
+            ? '<div class="glow-accent"></div>'
+            : '<div class="glow"></div>';
   const hasImage = 'image' in slide && Boolean(slide.image) && !isCover;
   const isEvidence = slide.type === 'point' && Boolean(slide.bullets && slide.bullets.length > 0);
-  const contentClass = `${isCover ? ' end' : isOutro ? ' center' : ''}${hasImage ? ' has-image' : ''}${isEvidence ? ' evidence' : ''}`;
+  const contentClass = `${isCover ? ' end' : isOutro ? ' center' : ''}${hasImage ? ' has-image' : ''}${isEvidence ? ' evidence' : ''}${isV2 ? ' v2top' : ''}${hero ? ' step-img' : ''}`;
   const bodyClasses = [
     isCover && slide.image ? 'photo' : '',
     isLight ? 'light' : '',
+    isDark ? 'dk' : '',
+    isV2 ? 'v2' : '',
+    hero ? 'hero-on' : '',
+    // 마지막 장은 테마와 상관없이 표지 사진 위 어두운 톤
+    (theme === 'dark' || theme === 'light') && isOutro ? 'dk-outro' : '',
   ]
     .filter(Boolean)
     .join(' ');
-  const bodyStyle = isLight ? ` style="--accent: ${palette.accent}; --tint: ${palette.tint};"` : '';
+  const bodyStyle = isLight
+    ? ` style="--accent: ${palette.accent}; --tint: ${palette.tint};"`
+    : theme === 'dark' || isOutro
+      ? ` style="--accent: ${DARK_ACCENT[paletteName]};"`
+      : '';
 
   return `<!doctype html>
 <html lang="ko">
