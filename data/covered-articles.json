@@ -57,5 +57,19 @@
       "https://www.euronews.com/2026/10/09/iran-and-russia-used-chatgpt-for-propaganda-by-fake-journalists-openai-says"
     ],
     "note": "오픈AI가 8일 공식 보고서로 발표했고 NPR과 워싱턴포스트 등 주요 매체가 확인한 소식이다. 가짜 기자 이름으로 AI가 쓴 글이 실제 지역 신문과 해외 매체에 실렸다는 내용이라, 독자가 평소 보는 뉴스와 바로 연결되고 쉽게 설명할 수 있다. 탈락 후보: 'AI 재난 시나리오'(악시오스 인용, 비공개 시나리오에 가까움), 닛콘 현미경 영상 AI 실격(재미는 있으나 파급력이 작음), 앤트로픽 내부 평가 인터넷 차단(이미 다룬 필라델피아 가짜 제보와 같은 주제)."
+  },
+  {
+    "date": "2026-10-10",
+    "slug": "2026-10-10-nikon-small-world-ai-disqualified",
+    "topic": "니콘 현미경 영상 대회 1위, 생성형 AI 사용으로 실격…새 우승자 선정",
+    "sources": [
+      "https://www.nikonsmallworld.com/news/nikon-small-world-in-motion-video-statement",
+      "https://www.nikonsmallworld.com/",
+      "https://petapixel.com/2026/10/09/nikon-disqualifies-winner-of-small-world-in-motion-competition-for-using-ai/",
+      "https://gizmodo.com/contest-winning-microscope-thrown-out-for-using-generative-ai-2000824398",
+      "https://www.cnn.com/2026/10/01/science/nikon-competition-ai-backlash-scli-intl",
+      "https://www.diyphotography.net/nikon-small-world-in-motion-2026-winner-disqualified-over-ai-use/"
+    ],
+    "note": "9일 The Verge, Ars Technica, BBC가 함께 전한 소식입니다. 과학 영상 대회 1위작이 생성형 AI를 쓴 것으로 드러나 실격됐습니다. 진짜처럼 보이는 AI 영상을 전문가 심사에서도 걸러내기 어렵다는 점이라서, 비개발자도 쉽게 이해하고 공감할 수 있습니다. 탈락한 주요 후보: 타입세이프 '제브' 투자 유치는 기업가치와 투자 중심 소식이라 제외했습니다. AI 기업의 '최악의 재난 시나리오' 기사는 비공개 검토를 전한 악시오스 보도에 기댄 것이라 제외했습니다. 앤트로픽 평가 환경 인터넷 차단은 이미 다룬 필라델피아 경찰 사건의 후속이라 제외했습니다. 참고로 이 기사의 원문 주소는 후보 목록의 The Verge 링크(1008930/nikon-microscopic-video-competition-winner-disqualified-for-using-generative-ai로 추정)를 확인해 쓰세요. 위 주소는 목록에 표시된 경로를 바탕으로 한 것입니다."
   }
 ]
