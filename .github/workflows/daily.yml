@@ -2,8 +2,12 @@ name: 매일 카드뉴스 만들기
 
 on:
   schedule:
-    # 매일 한국 시간 오전 7시 반쯤 (UTC 22:23). 정각은 GitHub가 몰려서 건너뛰거나 늦추는 일이 잦아 비껴 둔다
+    # 매일 한국 시간 오전 7시 23분쯤 (UTC 22:23). 정각은 GitHub가 몰려서 건너뛰거나 늦추는 일이 잦아 비껴 둔다
     - cron: '23 22 * * *'
+    # 보조 예약: GitHub 예약 실행은 가끔 통째로 빠지므로 8시 47분, 10시 13분에 한 번씩 더 건다.
+    # 그날 카드를 이미 만들었으면 --skip-if-done 으로 바로 끝난다 (중복 없음)
+    - cron: '47 23 * * *'
+    - cron: '13 1 * * *'
   # 직접 실행해서 확인할 때 사용
   workflow_dispatch:
     inputs:
@@ -46,6 +50,8 @@ jobs:
         run: |
           if [ -n "$INPUT_URL" ]; then
             npm start -- --url "$INPUT_URL"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            npm start -- --skip-if-done
           else
             npm start
           fi

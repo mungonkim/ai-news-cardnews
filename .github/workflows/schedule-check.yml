@@ -1,0 +1,14 @@
+name: 예약 실행 점검 (임시)
+
+# 이 저장소에서 GitHub 예약 실행이 실제로 도는지 확인하는 임시 워크플로다.
+# 10분마다 글자 한 줄만 찍고 끝난다 (몇 초). 확인이 끝나면 지운다.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: echo "예약 실행 확인 $(date -u)"

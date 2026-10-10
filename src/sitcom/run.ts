@@ -51,18 +51,33 @@ const ensureBaseImage = async (): Promise<boolean> => {
 const readMade = async (): Promise<string[]> =>
   (await exists(MADE_FILE)) ? (JSON.parse(await readFile(MADE_FILE, 'utf8')) as string[]) : [];
 
-// 아직 만들지 않은 대본 중 파일 이름(날짜)이 가장 이른 것을 고른다
-const pickNextEpisode = async (): Promise<string> => {
+// 아직 만들지 않은 대본 중 파일 이름(날짜)이 오늘(한국 날짜) 이전인 것 가운데 가장 이른 것을 고른다.
+// 날짜가 아직 안 된 대본은 고르지 않는다 (보조 예약이 다음 주 대본을 미리 만들지 않게)
+const pickNextEpisode = async (): Promise<string | undefined> => {
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
   const made = new Set(await readMade());
   const files = (await readdir(EPISODE_DIR)).filter((f) => f.endsWith('.json')).sort();
-  const next = files.find((f) => !made.has(f.replace(/\.json$/, '')));
-  if (!next) throw new Error('만들 대본이 없습니다. content/sitcom/에 새 대본을 추가해 주세요.');
-  return path.join(EPISODE_DIR, next);
+  const next = files.find((f) => !made.has(f.replace(/\.json$/, '')) && f.slice(0, 10) <= today);
+  return next ? path.join(EPISODE_DIR, next) : undefined;
+};
+
+// 오늘 날짜로 시작하는 대본을 이미 만들었는지 (예약을 여러 번 걸어 둘 때 판단용)
+const alreadyMadeToday = async (): Promise<boolean> => {
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  return (await readMade()).some((slug) => slug.startsWith(today));
 };
 
 const run = async (): Promise<void> => {
   const episodeArg = process.argv.slice(2).find((arg) => !arg.startsWith('--'));
   const episodePath = episodeArg ? path.resolve(ROOT, episodeArg) : await pickNextEpisode();
+  if (!episodePath) {
+    // 예약 실행: 이미 만들었거나 오늘 만들 대본이 없으면 조용히 끝낸다 (보조 예약 중복 방지)
+    if (flag('--scheduled') && (await alreadyMadeToday())) {
+      log('오늘 만들 대본은 이미 만들었습니다. 이번 예약 실행은 건너뜁니다.');
+      return;
+    }
+    throw new Error('만들 대본이 없습니다. content/sitcom/에 오늘 날짜 이전의 새 대본을 추가해 주세요.');
+  }
   log(`대본: ${path.relative(ROOT, episodePath)}`);
   const episode = JSON.parse(await readFile(episodePath, 'utf8')) as Episode;
   const outDir = path.join(ROOT, 'output', 'sitcom', episode.slug);

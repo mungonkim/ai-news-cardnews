@@ -4,6 +4,7 @@
 //   --no-images  이미지 API를 쓰지 않는다 (표지는 그래픽 표지로 대체)
 //   --no-slack   슬랙으로 보내지 않고 폴더에만 저장한다
 //   --reel       카드를 넘기는 릴스용 영상도 만든다 (기본은 만들지 않음)
+//   --skip-if-done  오늘(한국 날짜) 카드를 이미 만들었으면 아무것도 하지 않는다 (예약을 여러 번 걸어 둘 때 중복 방지)
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { collectCandidates } from './pipeline/collect.ts';
@@ -30,6 +31,10 @@ const log = (message: string): void => console.log(`[${new Date().toLocaleTimeSt
 const run = async (): Promise<void> => {
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
   const covered = JSON.parse(await readFile(COVERED_PATH, 'utf-8')) as CoveredArticle[];
+  if (flag('--skip-if-done') && covered.some((article) => article.date === today)) {
+    log(`오늘(${today}) 카드는 이미 만들었습니다. 이번 예약 실행은 건너뜁니다.`);
+    return;
+  }
 
   // 1. 기사 선정
   log('기사 후보를 모으는 중');

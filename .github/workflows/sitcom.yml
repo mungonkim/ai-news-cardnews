@@ -4,6 +4,9 @@ on:
   schedule:
     # 매주 월요일 한국 시간 오전 9시 17분쯤 (UTC 월요일 00:17). 정각은 건너뛰는 일이 잦아 비껴 둔다
     - cron: '17 0 * * 1'
+    # 보조 예약: GitHub 예약 실행이 빠질 때를 대비해 10시 47분, 12시 13분에 한 번씩 더 건다 (이미 만들었으면 바로 끝난다)
+    - cron: '47 1 * * 1'
+    - cron: '13 3 * * 1'
   # 직접 실행할 때 대본 파일을 고를 수 있다 (비우면 아직 안 만든 다음 대본)
   workflow_dispatch:
     inputs:
@@ -62,6 +65,8 @@ jobs:
         run: |
           if [ -n "$EPISODE" ]; then
             npm run sitcom -- "$EPISODE"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            npm run sitcom -- --scheduled
           else
             npm run sitcom
           fi
