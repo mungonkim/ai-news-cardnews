@@ -71,5 +71,16 @@
       "https://www.diyphotography.net/nikon-small-world-in-motion-2026-winner-disqualified-over-ai-use/"
     ],
     "note": "9일 The Verge, Ars Technica, BBC가 함께 전한 소식입니다. 과학 영상 대회 1위작이 생성형 AI를 쓴 것으로 드러나 실격됐습니다. 진짜처럼 보이는 AI 영상을 전문가 심사에서도 걸러내기 어렵다는 점이라서, 비개발자도 쉽게 이해하고 공감할 수 있습니다. 탈락한 주요 후보: 타입세이프 '제브' 투자 유치는 기업가치와 투자 중심 소식이라 제외했습니다. AI 기업의 '최악의 재난 시나리오' 기사는 비공개 검토를 전한 악시오스 보도에 기댄 것이라 제외했습니다. 앤트로픽 평가 환경 인터넷 차단은 이미 다룬 필라델피아 경찰 사건의 후속이라 제외했습니다. 참고로 이 기사의 원문 주소는 후보 목록의 The Verge 링크(1008930/nikon-microscopic-video-competition-winner-disqualified-for-using-generative-ai로 추정)를 확인해 쓰세요. 위 주소는 목록에 표시된 경로를 바탕으로 한 것입니다."
+  },
+  {
+    "date": "2026-10-11",
+    "slug": "2026-10-11-nadella-ai-emergency-brake",
+    "topic": "마이크로소프트 CEO 나델라 \"AI 모델에는 비상 브레이크가 필요하다\"",
+    "sources": [
+      "https://x.com/satyanadella/status/2108931348857827686",
+      "https://www.cnbc.com/2026/10/10/microsoft-satya-nadella-ai-emergency-brake-safety.html",
+      "https://techcrunch.com/2026/10/10/microsofts-satya-nadella-says-ai-models-need-an-emergency-brake/"
+    ],
+    "note": "예약 실행 기록 저장이 충돌로 실패해 직접 추가함 (2026-10-11)"
   }
 ]
