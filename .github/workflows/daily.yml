@@ -2,8 +2,8 @@ name: 매일 카드뉴스 만들기
 
 on:
   schedule:
-    # 매일 한국 시간 오전 8시 (UTC 23:00)
-    - cron: '0 23 * * *'
+    # 매일 한국 시간 오전 7시 반쯤 (UTC 22:23). 정각은 GitHub가 몰려서 건너뛰거나 늦추는 일이 잦아 비껴 둔다
+    - cron: '23 22 * * *'
   # 직접 실행해서 확인할 때 사용
   workflow_dispatch:
     inputs:
