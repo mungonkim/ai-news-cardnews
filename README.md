@@ -4,7 +4,7 @@
 
 ## 동작 순서
 ```
-GitHub Actions (매일 08:00 KST)
+GitHub Actions (매일 07:23 KST, 외부 예약 서비스 cron-job.org가 실행을 누르고 GitHub 예약은 보조. 같은 날 두 번 만들지 않는다)
  1. RSS로 기사 후보 수집 (src/pipeline/collect.ts, 목록은 feeds.ts)
  2. Claude가 기사 1건 선정 (일상 영향, 공식 발표, 설명 용이성) + 체험 후보 표시
  3. Claude가 공식 원문으로 사실 확인 (확인하지 못한 내용은 카드에서 제외)
