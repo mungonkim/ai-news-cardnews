@@ -82,5 +82,17 @@
       "https://techcrunch.com/2026/10/10/microsofts-satya-nadella-says-ai-models-need-an-emergency-brake/"
     ],
     "note": "예약 실행 기록 저장이 충돌로 실패해 직접 추가함 (2026-10-11)"
+  },
+  {
+    "date": "2026-10-12",
+    "slug": "2026-10-12-talk-to-ai-like-a-coworker",
+    "topic": "\"AI와 직장 동료처럼 대화하라\"…클로드 코드 개발자의 프롬프트 조언",
+    "sources": [
+      "https://x.com/bcherny/status/2107565388250874193",
+      "https://www.aol.com/articles/creator-claude-codes-prompting-advice-160234000.html",
+      "https://support.anthropic.com/en/articles/7996843-how-do-i-talk-to-claude",
+      "https://code.claude.com/docs/en/best-practices"
+    ],
+    "note": "'클로드 코드'를 만든 앤트로픽 책임자가 10월 7일 X에 공개한 조언이 10월 11일에 보도됐다. 어려운 프롬프트 기술 없이 동료에게 말하듯 요청하면 된다는 내용이라, AI가 어렵게 느껴지는 독자에게 바로 도움이 된다. 원하는 결과, 들일 노력, 결과를 확인할 방법이라는 세 가지 기준이 있어서 카드뉴스로 쉽게 정리할 수 있다. 탈락 후보: 애플 '홈뷰'는 블룸버그 보도 기반이라 공식 확인이 부족했고, 앤트로픽 평가 인터넷 차단·백악관 사고 보고 의무화·나델라 발언은 이미 다룬 앤트로픽 사건·안전 주제와 겹쳤다."
   }
 ]
