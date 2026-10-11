@@ -4,9 +4,11 @@ name: 예약 실행 점검 (임시)
 # 정해진 시각에 슬랙으로 알림 한 줄을 보낸다. 확인이 끝나면 지운다.
 on:
   schedule:
-    # 정해진 시각 두 번 (한국 시간 11시 47분, 12시 7분). 잦은 예약은 깃허브가 자주 건너뛴다
-    - cron: '47 2 * * *'
-    - cron: '7 3 * * *'
+    # 정해진 시각 두 번 (한국 시간 12시 17분, 12시 33분). 잦은 예약은 깃허브가 자주 건너뛴다
+    - cron: '17 3 * * *'
+    - cron: '33 3 * * *'
+  # 슬랙 알림 자체가 되는지 손으로 확인할 때
+  workflow_dispatch:
 
 jobs:
   ping:
@@ -19,7 +21,8 @@ jobs:
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
         run: |
           KST=$(TZ=Asia/Seoul date '+%m월 %d일 %H:%M')
+          if [ "${{ github.event_name }}" = "schedule" ]; then HOW="예약으로 자동"; else HOW="손으로"; fi
           curl -sS -X POST https://slack.com/api/chat.postMessage \
             -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
             -H "Content-Type: application/json; charset=utf-8" \
-            -d "{\"channel\":\"${SLACK_CHANNEL_ID}\",\"text\":\"⏰ 예약 실행 점검: 깃허브 예약이 ${KST}(한국 시간)에 자동으로 돌았어요.\"}" | grep -q '"ok":true'
+            -d "{\"channel\":\"${SLACK_CHANNEL_ID}\",\"text\":\"⏰ 예약 실행 점검: ${KST}(한국 시간)에 ${HOW} 실행됐어요.\"}" | grep -q '"ok":true'
