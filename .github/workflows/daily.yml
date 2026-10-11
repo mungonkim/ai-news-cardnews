@@ -15,6 +15,10 @@ on:
         description: '특정 기사 주소로 만들기 (비워 두면 자동 선정)'
         required: false
         default: ''
+      skip_if_done:
+        description: '오늘 카드를 이미 만들었으면 건너뛰기 (외부 예약 서비스가 "true"로 실행한다)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -50,7 +54,7 @@ jobs:
         run: |
           if [ -n "$INPUT_URL" ]; then
             npm start -- --url "$INPUT_URL"
-          elif [ "${{ github.event_name }}" = "schedule" ]; then
+          elif [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event.inputs.skip_if_done }}" = "true" ]; then
             npm start -- --skip-if-done
           else
             npm start

@@ -14,6 +14,10 @@ on:
         description: '대본 JSON 경로 (비우면 아직 안 만든 다음 대본, 예: content/sitcom/2026-10-12-diet-starts-today.json)'
         required: false
         default: ''
+      scheduled:
+        description: '예약 실행처럼 동작 (오늘 이미 만들었으면 건너뛰기). 외부 예약 서비스가 "true"로 실행한다'
+        required: false
+        default: ''
       from_run:
         description: '편집만 다시 할 때: 이전 실행 번호(run id). 그 실행의 구간 영상을 가져와 새로 만들지 않는다 (3일 안의 실행만)'
         required: false
@@ -65,7 +69,7 @@ jobs:
         run: |
           if [ -n "$EPISODE" ]; then
             npm run sitcom -- "$EPISODE"
-          elif [ "${{ github.event_name }}" = "schedule" ]; then
+          elif [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event.inputs.scheduled }}" = "true" ]; then
             npm run sitcom -- --scheduled
           else
             npm run sitcom

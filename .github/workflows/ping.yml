@@ -1,0 +1,28 @@
+name: 예약 시험 알림
+
+# 외부 예약 서비스(cron-job.org)가 정해진 시각에 실행을 눌러 주는지 확인하는 시험용 워크플로다.
+# 슬랙으로 알림 한 줄만 보내고 끝난다 (몇 초).
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: '누가 실행했는지 (예: cron-job.org)'
+        required: false
+        default: '손으로'
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: 슬랙으로 알림 보내기
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          FROM: ${{ github.event.inputs.from }}
+        run: |
+          KST=$(TZ=Asia/Seoul date '+%m월 %d일 %H:%M:%S')
+          curl -sS -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "{\"channel\":\"${SLACK_CHANNEL_ID}\",\"text\":\"⏰ 예약 시험: ${FROM}(이)가 ${KST}(한국 시간)에 실행했어요.\"}" | grep -q '"ok":true'
