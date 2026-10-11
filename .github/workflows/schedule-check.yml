@@ -1,7 +1,7 @@
 name: 예약 실행 점검 (임시)
 
 # 이 저장소에서 GitHub 예약 실행이 실제로 도는지 확인하는 임시 워크플로다.
-# 10분마다 글자 한 줄만 찍고 끝난다 (몇 초). 확인이 끝나면 지운다.
+# 10분마다 슬랙으로 알림 한 줄을 보낸다. 확인이 끝나면 지운다.
 on:
   schedule:
     - cron: '*/10 * * * *'
@@ -11,4 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - run: echo "예약 실행 확인 $(date -u)"
+      - name: 슬랙으로 점검 알림 보내기
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+        run: |
+          KST=$(TZ=Asia/Seoul date '+%m월 %d일 %H:%M')
+          curl -sS -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "{\"channel\":\"${SLACK_CHANNEL_ID}\",\"text\":\"⏰ 예약 실행 점검: 깃허브 예약이 ${KST}(한국 시간)에 자동으로 돌았어요.\"}" | grep -q '"ok":true'
