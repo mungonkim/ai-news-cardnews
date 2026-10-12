@@ -94,5 +94,19 @@
       "https://code.claude.com/docs/en/best-practices"
     ],
     "note": "'클로드 코드'를 만든 앤트로픽 책임자가 10월 7일 X에 공개한 조언이 10월 11일에 보도됐다. 어려운 프롬프트 기술 없이 동료에게 말하듯 요청하면 된다는 내용이라, AI가 어렵게 느껴지는 독자에게 바로 도움이 된다. 원하는 결과, 들일 노력, 결과를 확인할 방법이라는 세 가지 기준이 있어서 카드뉴스로 쉽게 정리할 수 있다. 탈락 후보: 애플 '홈뷰'는 블룸버그 보도 기반이라 공식 확인이 부족했고, 앤트로픽 평가 인터넷 차단·백악관 사고 보고 의무화·나델라 발언은 이미 다룬 앤트로픽 사건·안전 주제와 겹쳤다."
+  },
+  {
+    "date": "2026-10-13",
+    "slug": "2026-10-13-meta-muse-wonder-paid-ai-agent",
+    "topic": "메타, 자체 최고 AI 모델 '뮤즈 원더' 공개…최신 모델은 유료 구독자 전용",
+    "sources": [
+      "https://about.fb.com/news/2026/10/introducing-muse-wonder-models/",
+      "https://research.meta.ai/blog/muse-wonder",
+      "https://dev.meta.ai/resources/blog/build-with-muse-wonder",
+      "https://dev.meta.ai/models/muse-wonder",
+      "https://x.com/finkd/status/2109689305073614918",
+      "https://www.cnbc.com/2026/10/12/meta-muse-wonder-ai-model-agent.html"
+    ],
+    "note": "메타가 10월 12일(현지시간) 자사 최고 성능 모델 '뮤즈 원더'를 공식 발표했고, CNBC·테크크런치·더버지가 함께 보도해 확인된 소식이다. 식당 예약처럼 일상 업무를 대신 처리하는 'AI 비서'용 모델이라 비개발자에게 쉽게 설명할 수 있다. 앱은 무료지만 최신 모델은 월 20달러·100달러 구독이 필요해, 'AI도 이제 돈을 내고 쓰는 시대인가'라는 독자 관심 소재로 풀 수 있다. 탈락 후보: 국감의 AI 캐릭터 챗봇 청소년 보호 논란(국내 이슈지만 규제 논의 단계라 후순위), 트럼프의 'AI→SI' 용어 변경(10~11일 보도로 시점이 지남), 네이버지도 AI 글래스 길안내(AI 글래스가 필요해 독자 접근성이 낮음)."
   }
 ]
