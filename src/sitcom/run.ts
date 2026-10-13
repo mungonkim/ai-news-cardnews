@@ -8,7 +8,7 @@ import path from 'node:path';
 import { generateWithRetry } from '../pipeline/images.ts';
 import { sendCards, sendText } from '../pipeline/slack.ts';
 import { editSitcom, type SubtitleShot } from './edit.ts';
-import { download, estimate, generate, uploadFile } from './higgsfield.ts';
+import { download, estimate, FAILED_STATUSES, type HiggsfieldResult, submit, uploadFile, waitFor } from './higgsfield.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 // 영상 모델: Kling 3.0 표준, 이미지 → 영상 (컷 나누기와 소리 지원)
@@ -18,6 +18,10 @@ const BASE_IMAGE = path.join(ROOT, 'assets', 'sitcom', 'base.png');
 const EPISODE_DIR = path.join(ROOT, 'content', 'sitcom');
 // 이미 만든 편의 slug 목록 (같은 대본을 두 번 만들지 않게 한다)
 const MADE_FILE = path.join(ROOT, 'data', 'sitcom-made.json');
+// 요금을 내고 접수한 생성 요청 번호 { slug: { 구간 번호: 요청 번호 } }.
+// 실행이 중간에 실패해도 다음 실행이 새로 요청(재결제)하지 않고 이 번호로 결과를 받아 온다
+const PENDING_FILE = path.join(ROOT, 'data', 'sitcom-pending.json');
+type Pending = Record<string, Record<string, string>>;
 const ACCOUNT_HANDLE = '@ai_chingu';
 
 // 등장인물과 세트 (모든 컷에 같은 설명을 붙여 모습이 바뀌지 않게 한다)
@@ -50,6 +54,24 @@ const ensureBaseImage = async (): Promise<boolean> => {
 
 const readMade = async (): Promise<string[]> =>
   (await exists(MADE_FILE)) ? (JSON.parse(await readFile(MADE_FILE, 'utf8')) as string[]) : [];
+
+const readPending = async (): Promise<Pending> =>
+  (await exists(PENDING_FILE)) ? (JSON.parse(await readFile(PENDING_FILE, 'utf8')) as Pending) : {};
+
+// 구간들이 동시에 고치므로 순서대로 쓴다
+let pendingWrite: Promise<void> = Promise.resolve();
+const updatePending = (slug: string, segment: number, requestId: string | undefined): Promise<void> => {
+  pendingWrite = pendingWrite.then(async () => {
+    const pending = await readPending();
+    const entry = { ...pending[slug] };
+    if (requestId) entry[segment] = requestId;
+    else delete entry[segment];
+    if (Object.keys(entry).length > 0) pending[slug] = entry;
+    else delete pending[slug];
+    await writeFile(PENDING_FILE, `${JSON.stringify(pending, null, 2)}\n`);
+  });
+  return pendingWrite;
+};
 
 // 아직 만들지 않은 대본 중 파일 이름(날짜)이 오늘(한국 날짜) 이전인 것 가운데 가장 이른 것을 고른다.
 // 날짜가 아직 안 된 대본은 고르지 않는다 (보조 예약이 다음 주 대본을 미리 만들지 않게)
@@ -107,25 +129,56 @@ const run = async (): Promise<void> => {
       duration: segment.shots.reduce((sum, shot) => sum + shot.duration, 0),
     };
   });
+  const pending = (await readPending())[episode.slug] ?? {};
   for (const [i, body] of bodies.entries()) {
-    if (!existing[i]) log(`구간 ${i + 1} 예상 비용: ${await estimate(VIDEO_ENDPOINT, body)}`);
+    if (!existing[i] && !pending[i + 1]) log(`구간 ${i + 1} 예상 비용: ${await estimate(VIDEO_ENDPOINT, body)}`);
   }
 
-  const files = await Promise.all(
+  // 구간 하나가 실패해도 나머지는 끝까지 기다려 받아 둔다 (이미 낸 요금을 버리지 않게)
+  const settled = await Promise.allSettled(
     bodies.map(async (body, i) => {
-      if (existing[i]) {
-        log(`구간 ${i + 1}: 이미 만든 영상을 그대로 씁니다`);
-        return segmentNames[i];
-      }
-      log(`구간 ${i + 1} 영상을 만드는 중 (${body.duration}초)`);
-      const result = await generate(VIDEO_ENDPOINT, body, (message) => log(`구간 ${i + 1}: ${message}`));
-      if (!result.video?.url) throw new Error(`구간 ${i + 1} 결과에 영상 주소가 없습니다: ${JSON.stringify(result).slice(0, 200)}`);
+      const segment = i + 1;
       const name = segmentNames[i];
+      const segLog = (message: string): void => log(`구간 ${segment}: ${message}`);
+      if (existing[i]) {
+        segLog('이미 만든 영상을 그대로 씁니다');
+        return name;
+      }
+      let result: HiggsfieldResult | undefined;
+      const previousId = pending[segment];
+      if (previousId) {
+        segLog(`지난 실행에서 접수한 요청(${previousId})의 결과를 받아 옵니다 (추가 요금 없음)`);
+        result = await waitFor(previousId, segLog);
+        if (FAILED_STATUSES.includes(result.status)) {
+          segLog(`지난 요청이 ${result.status} 상태라 새로 요청합니다`);
+          await updatePending(episode.slug, segment, undefined);
+          result = undefined;
+        }
+      }
+      if (!result) {
+        segLog(`영상을 만드는 중 (${body.duration}초)`);
+        const requestId = await submit(VIDEO_ENDPOINT, body);
+        await updatePending(episode.slug, segment, requestId);
+        segLog(`요청 접수: ${requestId}`);
+        result = await waitFor(requestId, segLog);
+      }
+      if (FAILED_STATUSES.includes(result.status)) {
+        // 실패한 요청은 기록에서 지워 다음 실행이 새로 요청하게 한다
+        await updatePending(episode.slug, segment, undefined);
+        throw new Error(`구간 ${segment} 생성이 끝나지 못했습니다 (${result.status}): ${JSON.stringify(result).slice(0, 300)}`);
+      }
+      if (!result.video?.url) throw new Error(`구간 ${segment} 결과에 영상 주소가 없습니다: ${JSON.stringify(result).slice(0, 200)}`);
       await writeFile(path.join(outDir, name), await download(result.video.url));
-      log(`구간 ${i + 1} 완료`);
+      segLog('완료');
       return name;
     }),
   );
+  const failures = settled.filter((s): s is PromiseRejectedResult => s.status === 'rejected');
+  if (failures.length > 0) {
+    const reasons = failures.map((f) => (f.reason instanceof Error ? f.reason.message : String(f.reason)));
+    throw new Error(`${reasons.join('\n')}\n(접수된 요청 번호는 data/sitcom-pending.json에 남아 다음 실행이 다시 받아 옵니다)`);
+  }
+  const files = segmentNames;
 
   // 3. 편집: 이어 붙이고 배너와 자막을 넣는다
   log('편집하는 중 (자막, 배너)');
@@ -140,6 +193,7 @@ const run = async (): Promise<void> => {
   log(`완성: ${finalFile}`);
   const made = await readMade();
   if (!made.includes(episode.slug)) await writeFile(MADE_FILE, `${JSON.stringify([...made, episode.slug], null, 2)}\n`);
+  for (const segment of episode.segments.keys()) await updatePending(episode.slug, segment + 1, undefined);
 
   // 4. 슬랙 알림
   if (flag('--no-slack')) return;

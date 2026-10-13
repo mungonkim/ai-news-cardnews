@@ -75,12 +75,8 @@ export const estimate = async (endpoint: string, body: Record<string, unknown>):
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-// 생성을 요청하고 끝날 때까지 기다린 뒤 결과를 돌려준다
-export const generate = async (
-  endpoint: string,
-  body: Record<string, unknown>,
-  log: (message: string) => void,
-): Promise<HiggsfieldResult> => {
+// 생성을 요청하고 요청 번호를 돌려준다 (요금은 이때 나간다)
+export const submit = async (endpoint: string, body: Record<string, unknown>): Promise<string> => {
   const submitResponse = await fetch(`${BASE_URL}/${endpoint}`, {
     method: 'POST',
     headers: {
@@ -91,20 +87,34 @@ export const generate = async (
     },
     body: JSON.stringify(body),
   });
-  const submitted = await readJson<SubmitResponse>(submitResponse, '생성 요청');
-  log(`요청 접수: ${submitted.request_id}`);
+  return (await readJson<SubmitResponse>(submitResponse, '생성 요청')).request_id;
+};
 
+export const FAILED_STATUSES = ['failed', 'nsfw', 'canceled'];
+// 상태 확인이 잠깐 실패해도(502 등) 이 횟수까지는 기다렸다 다시 묻는다
+const MAX_POLL_ERRORS = 10;
+
+// 요청 번호로 끝날 때까지 기다린다. 완료나 실패 상태를 그대로 돌려준다 (실패 판단은 부르는 쪽에서)
+export const waitFor = async (requestId: string, log: (message: string) => void): Promise<HiggsfieldResult> => {
+  const statusUrl = `${BASE_URL}/requests/${requestId}/status`;
   const startedAt = Date.now();
+  let errors = 0;
   while (Date.now() - startedAt < POLL_TIMEOUT_MS) {
     await sleep(POLL_INTERVAL_MS);
-    const statusResponse = await fetch(submitted.status_url, { headers: { Authorization: authHeader() } });
-    const result = await readJson<HiggsfieldResult>(statusResponse, '상태 확인');
-    if (result.status === 'completed') return result;
-    if (['failed', 'nsfw', 'canceled'].includes(result.status)) {
-      throw new Error(`Higgsfield 생성이 끝나지 못했습니다 (${result.status}): ${JSON.stringify(result).slice(0, 300)}`);
+    try {
+      const statusResponse = await fetch(statusUrl, { headers: { Authorization: authHeader() } });
+      const result = await readJson<HiggsfieldResult>(statusResponse, '상태 확인');
+      errors = 0;
+      if (result.status === 'completed' || FAILED_STATUSES.includes(result.status)) return result;
+    } catch (error) {
+      // 서버가 잠깐 응답하지 않는 것(502 등)으로 이미 돈을 낸 생성을 버리지 않는다
+      errors += 1;
+      const message = error instanceof Error ? error.message : String(error);
+      if (errors >= MAX_POLL_ERRORS) throw new Error(`${message.slice(0, 200)} (요청 번호 ${requestId})`);
+      log(`상태 확인 일시 실패 ${errors}/${MAX_POLL_ERRORS}, 다시 확인합니다: ${message.slice(0, 80)}`);
     }
   }
-  throw new Error(`Higgsfield 생성이 ${POLL_TIMEOUT_MS / 60_000}분 안에 끝나지 않았습니다 (${submitted.request_id}).`);
+  throw new Error(`Higgsfield 생성이 ${POLL_TIMEOUT_MS / 60_000}분 안에 끝나지 않았습니다 (요청 번호 ${requestId}).`);
 };
 
 export const download = async (url: string): Promise<Buffer> => {
