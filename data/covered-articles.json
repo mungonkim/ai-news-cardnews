@@ -108,5 +108,17 @@
       "https://www.cnbc.com/2026/10/12/meta-muse-wonder-ai-model-agent.html"
     ],
     "note": "메타가 10월 12일(현지시간) 자사 최고 성능 모델 '뮤즈 원더'를 공식 발표했고, CNBC·테크크런치·더버지가 함께 보도해 확인된 소식이다. 식당 예약처럼 일상 업무를 대신 처리하는 'AI 비서'용 모델이라 비개발자에게 쉽게 설명할 수 있다. 앱은 무료지만 최신 모델은 월 20달러·100달러 구독이 필요해, 'AI도 이제 돈을 내고 쓰는 시대인가'라는 독자 관심 소재로 풀 수 있다. 탈락 후보: 국감의 AI 캐릭터 챗봇 청소년 보호 논란(국내 이슈지만 규제 논의 단계라 후순위), 트럼프의 'AI→SI' 용어 변경(10~11일 보도로 시점이 지남), 네이버지도 AI 글래스 길안내(AI 글래스가 필요해 독자 접근성이 낮음)."
+  },
+  {
+    "date": "2026-10-14",
+    "slug": "2026-10-14-facebook-your-algorithm",
+    "topic": "페이스북, AI로 내 피드 알고리즘을 직접 조정하는 '유어 알고리즘' 기능 출시",
+    "sources": [
+      "https://about.fb.com/news/2026/10/introducing-your-algorithm-facebook/",
+      "https://techcrunch.com/2026/10/13/facebook-is-giving-users-more-control-over-their-algorithm/",
+      "https://ppc.land/facebook-feed-now-takes-typed-requests-as-meta-adds-llms-to-ranking/",
+      "https://www.theverge.com/tech/1010344/meta-facebook-your-algorithm-ai"
+    ],
+    "note": "메타가 13일 공식 발표한 소식으로, 내 피드에 뜨는 주제를 '관심 있음/없음'으로 직접 고르면 추천이 바로 바뀝니다. 매일 쓰는 SNS 이야기라 비개발자도 쉽게 이해하고, '알고리즘을 내가 고른다'는 점이 카드뉴스 소재로 좋습니다. 탈락 후보는 제미나이 4 아르곤 출시(핵심 이용이 유료 구독자·개발자 중심이고 모델 성능 이야기라 어렵고, 어제 다룬 뮤즈 원더와 주제가 겹침)와 캐릭터AI 파산(일상에 미치는 영향이 작음)입니다."
   }
 ]
