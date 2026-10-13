@@ -14,6 +14,9 @@ const FONT = 'Noto Sans CJK KR';
 const BANNER_TOP = 280;
 const KO_BOTTOM = 460;
 const EN_BOTTOM = 580;
+// 구간 이음새 소리 페이드(초)
+const AUDIO_FADE_IN = 0.15;
+const AUDIO_FADE_OUT = 0.4;
 
 export type SubtitleShot = { duration: number; en?: string; ko?: string };
 export type EditSegment = { file: string; shots: SubtitleShot[] };
@@ -111,7 +114,11 @@ export const editSitcom = async (segments: EditSegment[], banner: string, workDi
       `[${i}:v]scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=decrease,pad=${WIDTH}:${HEIGHT}:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30,format=yuv420p[v${i}]`,
     );
     if (probes[i].hasAudio) {
-      filters.push(`[${i}:a]aresample=48000,aformat=channel_layouts=stereo[a${i}]`);
+      // 구간마다 따로 만든 소리라 이음새에서 웃음과 소리가 뚝 끊긴다. 시작은 짧게, 끝은 조금 길게 줄였다 키운다
+      const fadeOutStart = Math.max(0, probes[i].duration - AUDIO_FADE_OUT).toFixed(2);
+      filters.push(
+        `[${i}:a]aresample=48000,aformat=channel_layouts=stereo,afade=t=in:st=0:d=${AUDIO_FADE_IN},afade=t=out:st=${fadeOutStart}:d=${AUDIO_FADE_OUT}[a${i}]`,
+      );
     } else {
       filters.push(`anullsrc=r=48000:cl=stereo,atrim=0:${probes[i].duration.toFixed(2)}[a${i}]`);
     }
