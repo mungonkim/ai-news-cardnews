@@ -2,117 +2,122 @@
   "slug": "2026-10-19-lost-remote",
   "segments": [
     {
-      "shots": [
-        {
-          "duration": 4,
-          "prompt": "Wide shot. The woman lifts the sofa cushions one by one, searching, then says clearly: \"Where is the remote?\"",
-          "en": "Where is the remote?",
-          "ko": "리모컨 어디 갔지?"
-        },
-        {
-          "duration": 3,
-          "prompt": "Close-up of the Shiba Inu sitting on the sofa, deadpan. The dog says slowly in a deep calm male voice: \"Did you look for it?\" Then its mouth closes.",
-          "en": "Did you look for it?",
-          "ko": "찾아는 봤어?"
-        },
-        {
-          "duration": 4,
-          "prompt": "Medium shot. The woman throws her hands up and says: \"I looked everywhere. Even the fridge.\"",
-          "en": "I looked everywhere. Even the fridge.",
-          "ko": "다 찾아봤어. 냉장고까지."
-        },
-        {
-          "duration": 4,
-          "prompt": "Close-up of the Shiba Inu, one ear tilting. The dog says slowly in the deep voice: \"The fridge?\" Then its mouth closes and stays still while the studio audience laughs, and the laughter fades out before the shot ends.",
-          "en": "The fridge?",
-          "ko": "냉장고?"
-        }
-      ]
-    },
-    {
+      "location": "kitchen",
       "shots": [
         {
           "duration": 3,
-          "prompt": "The woman lies on the floor shining a small flashlight under the low TV cabinet. No dialogue. A short upbeat 1990s sitcom slap-bass transition riff plays at the start, then fades to silence.",
+          "prompt": "Wide shot of the kitchen. Dana opens the big refrigerator and peers inside; Aki sits on the kitchen floor watching her. No dialogue. A short upbeat 1990s sitcom slap-bass riff plays, then fades to silence.",
           "en": "",
           "ko": ""
         },
         {
           "duration": 3,
-          "prompt": "Close-up of the Shiba Inu on the sofa, deadpan. The dog says slowly in the deep voice: \"Warmer.\" Then its mouth closes.",
+          "prompt": "Medium shot. Dana, with her head halfway in the refrigerator, says: \"Where is the remote?\"",
+          "en": "Where is the remote?",
+          "ko": "리모컨 어디 갔지?"
+        },
+        {
+          "duration": 3,
+          "prompt": "Close-up of Aki sitting on the floor, deadpan. Aki says slowly: \"Did you look for it?\" Then his mouth closes.",
+          "en": "Did you look for it?",
+          "ko": "찾아는 봤어?"
+        },
+        {
+          "duration": 4,
+          "prompt": "Medium shot. Dana turns around holding the fridge door and says: \"Everywhere. Even in here.\"",
+          "en": "Everywhere. Even in here.",
+          "ko": "다 찾아봤어. 여기까지."
+        },
+        {
+          "duration": 3,
+          "prompt": "Close-up of Aki, one ear tilting. Aki says slowly: \"The fridge?\" Then his mouth closes.",
+          "en": "The fridge?",
+          "ko": "냉장고?"
+        },
+        {
+          "duration": 4,
+          "prompt": "Medium shot. Dana shrugs defensively and says: \"Last time it was in the fridge.\" Then the studio audience laughs, and the laughter fades out.",
+          "en": "Last time it was in the fridge.",
+          "ko": "지난번엔 냉장고에 있었거든."
+        }
+      ]
+    },
+    {
+      "location": "living-room",
+      "shots": [
+        {
+          "duration": 3,
+          "prompt": "Wide shot. Dana lies on the floor shining a small flashlight under the low TV cabinet; Aki sits on the sofa watching. No dialogue. A short slap-bass riff plays at the start, then fades to silence.",
+          "en": "",
+          "ko": ""
+        },
+        {
+          "duration": 3,
+          "prompt": "Close-up of Aki on the sofa, deadpan. Aki says slowly: \"Warmer.\" Then his mouth closes.",
           "en": "Warmer.",
           "ko": "가까워지고 있어."
         },
         {
           "duration": 4,
-          "prompt": "The woman stands up hopefully, walks toward the kitchen doorway and asks: \"Over here?\"",
+          "prompt": "Dana stands up hopefully, walks to the curtains by the window, and asks: \"Over here?\"",
           "en": "Over here?",
           "ko": "여기?"
         },
         {
           "duration": 5,
-          "prompt": "Close-up of the Shiba Inu, deadpan. The dog says slowly in the deep voice: \"Colder. Much colder.\" Then its mouth closes and stays still while the studio audience laughs, and the laughter fades out before the shot ends.",
+          "prompt": "Close-up of Aki, deadpan. Aki says slowly: \"Colder. Much colder.\" Then his mouth closes and stays still while the studio audience laughs, and the laughter fades out.",
           "en": "Colder. Much colder.",
           "ko": "멀어지고 있어. 아주 멀리."
         }
       ]
     },
     {
+      "location": "living-room",
       "shots": [
         {
-          "duration": 3,
-          "prompt": "Evening, the warm orange floor lamp glows. The woman drops onto the sofa next to the dog with a tired sigh. No dialogue. A short upbeat 1990s sitcom slap-bass transition riff plays at the start, then fades to silence.",
-          "en": "",
-          "ko": ""
-        },
-        {
-          "duration": 4,
-          "prompt": "Medium shot. The woman leans back on the sofa and says: \"Fine. No TV tonight. Let's just talk.\"",
+          "duration": 5,
+          "prompt": "Medium shot. Dana drops onto the sofa next to Aki with a tired sigh and says: \"Fine. No TV tonight. Let's just talk.\"",
           "en": "Fine. No TV tonight. Let's just talk.",
           "ko": "됐어. 오늘은 TV 없어. 그냥 얘기나 하자."
         },
         {
           "duration": 3,
-          "prompt": "Close-up of the Shiba Inu, eyes widening slightly. The dog says in the deep voice: \"I'll help you look.\" Then its mouth closes.",
+          "prompt": "Close-up of Aki, eyes widening slightly. Aki says quickly: \"I'll help you look.\" Then his mouth closes.",
           "en": "I'll help you look.",
           "ko": "같이 찾아 줄게."
         },
         {
-          "duration": 5,
-          "prompt": "The Shiba Inu stands up on the sofa. A black TV remote is revealed on the cushion exactly where the dog was sitting. The woman stares at it, then says: \"You were sitting on it?\"",
+          "duration": 4,
+          "prompt": "Aki stands up on the sofa. A black TV remote is revealed on the cushion exactly where he was sitting. Dana stares at it and says: \"You were sitting on it?\"",
           "en": "You were sitting on it?",
           "ko": "너 그 위에 앉아 있었어?"
-        }
-      ]
-    },
-    {
-      "shots": [
+        },
         {
           "duration": 4,
-          "prompt": "Close-up of the Shiba Inu, calm and deadpan. The dog says slowly in the deep voice: \"It was warm. I kept it safe.\" Then its mouth closes.",
+          "prompt": "Close-up of Aki, calm and deadpan. Aki says slowly: \"It was warm. I kept it safe.\" Then his mouth closes.",
           "en": "It was warm. I kept it safe.",
           "ko": "따뜻했거든. 지켜 준 거야."
         },
         {
           "duration": 3,
-          "prompt": "The woman picks up the remote and narrows her eyes at the dog: \"For how long?\"",
+          "prompt": "Dana picks up the remote and narrows her eyes at Aki: \"For how long?\"",
           "en": "For how long?",
           "ko": "언제부터?"
         },
         {
-          "duration": 4,
-          "prompt": "Close-up of the Shiba Inu, deadpan. The dog says slowly in the deep voice: \"Since Tuesday.\" Then its mouth closes and stays still while the studio audience bursts into laughter.",
+          "duration": 3,
+          "prompt": "Close-up of Aki, deadpan. Aki says slowly: \"Since Tuesday.\" Then his mouth closes and stays still while the studio audience bursts into laughter.",
           "en": "Since Tuesday.",
           "ko": "화요일부터."
         },
         {
-          "duration": 4,
-          "prompt": "Wide shot. The woman and the dog sit side by side watching the boxy CRT TV. The dog slowly places one paw on the remote, mouths closed. The audience laughter turns into applause, then a short upbeat 1990s sitcom slap-bass outro riff plays and fades out. No dialogue.",
+          "duration": 3,
+          "prompt": "Wide shot. Dana and Aki sit side by side watching the boxy CRT TV. Aki slowly places one paw on the remote, mouths closed. Laughter turns into applause, then a short slap-bass outro riff plays and fades out. No dialogue.",
           "en": "",
           "ko": ""
         }
       ]
     }
   ],
-  "caption": "📺 리모컨이 사라졌다. 범인은 생각보다 가까이에...\n\n온 집 안을 뒤지는 데이나와 묘하게 협조적인 아키. 리모컨은 대체 어디 있었을까요? 🐶\n\n여러분 집 리모컨은 주로 어디서 발견돼요? 소파 틈 🛋️ vs 전혀 엉뚱한 곳 ❄️ 댓글로!\n\n#시트콤 #강아지 #AI영상\n\n—————\n\n📺 The remote is missing. The suspect is closer than you think...\n\nDana searches the whole house while Aki is suspiciously helpful. So where was the remote all along? 🐶\n\nWhere does your remote usually turn up? Between the sofa cushions 🛋️ or somewhere totally random ❄️ Tell us in the comments!"
+  "caption": "📺 리모컨이 사라졌다. 범인은 생각보다 가까이에...\n\n냉장고까지 뒤지는 데이나와 묘하게 협조적인 아키. 리모컨은 대체 어디 있었을까요? 🐶\n\n여러분 집 리모컨은 주로 어디서 발견돼요? 소파 틈 🛋️ vs 전혀 엉뚱한 곳 ❄️ 댓글로!\n\n#시트콤 #강아지 #AI영상\n\n—————\n\n📺 The remote is missing. The suspect is closer than you think...\n\nDana searches everywhere, even the fridge, while Aki is suspiciously helpful. So where was the remote all along? 🐶\n\nWhere does your remote usually turn up? Between the sofa cushions 🛋️ or somewhere totally random ❄️ Tell us in the comments!"
 }
