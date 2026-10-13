@@ -22,6 +22,10 @@ on:
         description: '"true"면 영상을 만들지 않고 예상 비용만 확인 (요금 없음)'
         required: false
         default: ''
+      video_endpoint:
+        description: '비교용 영상 모델 주소 (비우면 Seedance 2.5)'
+        required: false
+        default: ''
       from_run:
         description: '편집만 다시 할 때: 이전 실행 번호(run id). 그 실행의 구간 영상을 가져와 새로 만들지 않는다 (3일 안의 실행만)'
         required: false
@@ -70,6 +74,8 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
           EPISODE: ${{ github.event.inputs.episode }}
+          # 비교용: 다른 영상 모델의 주소로 바꿔 볼 때만 쓴다 (비우면 기본 모델)
+          SITCOM_VIDEO_ENDPOINT: ${{ github.event.inputs.video_endpoint || 'bytedance/seedance-2.5/reference-to-video' }}
         run: |
           if [ "${{ github.event.inputs.estimate }}" = "true" ]; then
             npm run sitcom -- $EPISODE --estimate --no-slack
