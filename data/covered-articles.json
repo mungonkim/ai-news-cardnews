@@ -120,5 +120,17 @@
       "https://www.theverge.com/tech/1010344/meta-facebook-your-algorithm-ai"
     ],
     "note": "메타가 13일 공식 발표한 소식으로, 내 피드에 뜨는 주제를 '관심 있음/없음'으로 직접 고르면 추천이 바로 바뀝니다. 매일 쓰는 SNS 이야기라 비개발자도 쉽게 이해하고, '알고리즘을 내가 고른다'는 점이 카드뉴스 소재로 좋습니다. 탈락 후보는 제미나이 4 아르곤 출시(핵심 이용이 유료 구독자·개발자 중심이고 모델 성능 이야기라 어렵고, 어제 다룬 뮤즈 원더와 주제가 겹침)와 캐릭터AI 파산(일상에 미치는 영향이 작음)입니다."
+  },
+  {
+    "date": "2026-10-15",
+    "slug": "2026-10-15-character-ai-bankruptcy-disney",
+    "topic": "캐릭터닷AI, 파산 신청…디즈니에 270억 원 규모 자산 매각 추진",
+    "sources": [
+      "https://finance.yahoo.com/technology/ai/articles/character-ai-initiates-voluntary-chapter-035000862.html",
+      "https://www.cnbc.com/2026/10/13/character-ai-chapter-11-disney-bid.html",
+      "https://lufkindailynews.com/news_reuters/business/character-ai-files-for-bankruptcy-agrees-to-sell-some-assets-for-20-million/article_8a20277c-10cb-5092-ae66-607ed71572d8.html",
+      "https://variety.com/2026/biz/news/disney-bids-on-character-ai-assets-chapter-11-bankruptcy-1236909984/"
+    ],
+    "note": "활성 사용자 1,200만 명의 인기 AI 캐릭터 대화 서비스가 13일(현지시간) 챕터 11 파산보호를 신청했습니다. 로이터와 WSJ 등 주요 매체가 확인한 소식이라 신뢰도가 높습니다. 'AI 친구와 나눈 대화와 내 데이터는 어떻게 될까?'라는 질문으로 비개발자도 쉽게 풀어낼 수 있고, 청소년 안전 소송과 디즈니 인수 시도까지 이야기 거리도 풍부합니다. 탈락한 주요 후보: 8개 주의 OpenAI 소송은 청소년 안전이라는 같은 주제인데 이쪽이 더 구체적이고 파급력이 커서 제외했습니다. 앤트로픽의 'AI 웜' 경고는 설명 난도가 높아 제외했습니다. 구글 메시지 AI 스캠 방어는 안드로이드 한정이라 제외했습니다."
   }
 ]
