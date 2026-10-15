@@ -11,7 +11,11 @@ import { type Episode, hookHtml, OVERLAY_CSS, overlayHtml } from './template.ts'
 
 const WIDTH = 1080;
 const HEIGHT = 1920;
-const PANEL_TOP = 240;
+// 휴대폰 릴스 화면은 위쪽(상태 표시줄 · 상단 메뉴)과 아래쪽(문구 · 버튼)이 가려진다 (2026-10-15 사용자 확인: 맨 위 제목이 잘림).
+// 그래서 제목은 위에서 260px 아래에, 툰은 0.89배로 줄여 가운데(가로 960, 세로 1280)에 둔다.
+const PANEL_SCALE = 960 / 1080;
+const PANEL_LEFT = 60;
+const PANEL_TOP = 380;
 const FPS = 30;
 const FFMPEG = process.env.FFMPEG_PATH ?? 'ffmpeg';
 // 맨 앞에 가장 극적인 컷을 먼저 보여 주는 시간 (처음 1초 안에 멈추게 하는 훅)
@@ -43,7 +47,10 @@ const buildHtml = (
   .bg, .panel { position: absolute; opacity: 0; }
   .bg { inset: -80px; }
   .bg img { width: 100%; height: 100%; object-fit: cover; filter: blur(40px) brightness(0.55); }
-  .frame { position: absolute; left: 0; top: ${PANEL_TOP}px; width: 1080px; height: 1440px; overflow: hidden; }
+  .frame {
+    position: absolute; left: ${PANEL_LEFT}px; top: ${PANEL_TOP}px; width: 1080px; height: 1440px; overflow: hidden;
+    transform: scale(${PANEL_SCALE}); transform-origin: top left; border-radius: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
   .panel { inset: 0; }
   .panel img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 60%; }
   .panel .ov > * { scale: 0; }
@@ -52,11 +59,11 @@ const buildHtml = (
   .intro img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
   .title {
-    position: absolute; top: 70px; left: 0; right: 0; text-align: center;
+    position: absolute; top: 262px; left: 40px; right: 40px; text-align: center; word-break: keep-all;
     font-family: 'Jua', sans-serif; font-size: 72px; color: #fff; text-shadow: 0 4px 16px rgba(0,0,0,0.5);
   }
   .handle {
-    position: absolute; bottom: 70px; left: 0; right: 0; text-align: center;
+    position: absolute; top: 1688px; left: 0; right: 0; text-align: center;
     font-family: 'Pretendard Variable', sans-serif; font-weight: 700; font-size: 38px; color: rgba(255,255,255,0.85);
   }
 ${OVERLAY_CSS}
