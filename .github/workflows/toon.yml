@@ -1,0 +1,60 @@
+name: 공감툰 만들기
+
+# 지금은 직접 실행만 한다. 그림체와 형식이 정해지면 예약 실행을 붙인다.
+on:
+  workflow_dispatch:
+    inputs:
+      episode:
+        description: '대본 JSON 경로 (예: content/toon/2026-10-15-leave-on-time.json)'
+        required: true
+      mode:
+        description: 'style-test: 그림체 3가지로 1컷 · 3컷만 / full: 한 편 전체'
+        required: true
+        default: 'style-test'
+      style:
+        description: 'full일 때 그림체 (A, B, C)'
+        required: false
+        default: 'A'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toon
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: 브라우저 설치
+        run: npx playwright-core install --with-deps chromium
+
+      - name: 툰 만들기
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          EPISODE: ${{ github.event.inputs.episode }}
+          MODE: ${{ github.event.inputs.mode }}
+          STYLE: ${{ github.event.inputs.style }}
+        run: node src/toon/run.ts --episode "$EPISODE" --mode "$MODE" --style "$STYLE"
+
+      - name: 결과물 보관 (3일)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: toon-output
+          path: output/toon/
+          retention-days: 3
+          if-no-files-found: ignore
