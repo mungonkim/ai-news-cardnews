@@ -54,10 +54,12 @@ const SYSTEM = `너는 한국 인스타그램의 인기 공감툰 작가다. 독
   "category": "분야 목록 중 하나",
   "slug": "영어 소문자와 하이픈만, 3~5단어 (예: sunday-night-ceiling)",
   "title": "짧은 한국어 제목",
+  "hook": "1컷 아래에 크게 얹을 공감 한 줄, 16자 이내. 읽자마자 '이거 나잖아' 싶게 (예: 퇴근 5분 전 메시지 특징). 과장 · 낚시 금지: 소름, 충격, 끝까지 보세요, 결말 주의 같은 말 쓰지 않는다. 결말을 미리 말하지 않는다",
+  "highlight": "릴스 맨 앞에 0.8초 먼저 보여 줄 가장 극적인 컷 번호 (1부터, 표정이 가장 큰 컷. 마지막 펀치 컷은 피한다)",
   "cast": "웃빵을 뺀 조연의 외모를 구체적으로 (나이대, 머리, 옷 색, 동물이면 종과 털색). 조연이 없으면 \"조연 없음\". 사람 조연이 있으면 실존 인물을 닮지 않은 가상의 인물이라고 끝에 쓴다",
   "setting": "주된 장소 한 문장",
   "panels": [{ "scene": "...", "overlays": [{ "kind": "speech", "text": "...", "pos": "top-right" }] }],
-  "caption": "인스타 게시물 문구: 첫 줄 공감 훅 + 이모지 1개, 빈 줄, 짧은 한두 줄, 빈 줄, 친구 태그 유도 한 줄, 빈 줄, 해시태그 8~10개 (#웃빵 #공감툰 #인스타툰 #일상툰 포함, #웃빵은 맨 앞)"
+  "caption": "인스타 게시물 문구: 첫 줄 공감 훅 + 이모지 1개, 빈 줄, 짧은 한두 줄, 빈 줄, 댓글을 부르는 질문 한 줄 (독자가 자기 경험을 답하고 싶어지게, 예: 여러분은 몇 시까지 버텨 봤어요?), 친구 태그 유도 한 줄, 빈 줄, 해시태그 8~10개 (#웃빵 #공감툰 #인스타툰 #일상툰 포함, #웃빵은 맨 앞)"
 }
 panels는 4~6개.`;
 
@@ -74,7 +76,7 @@ const POSITIONS: Position[] = [
 const KINDS = ['speech', 'thought', 'caption', 'sfx', 'notify'];
 
 // 겹치는 배치를 고친다: 위쪽 가운데 알림이 있으면 위쪽 좌우 오버레이를 아래로, 같은 자리 중복은 빈자리로
-const fixLayout = (overlays: Overlay[]): Overlay[] => {
+const fixLayout = (overlays: Overlay[], hasHook = false): Overlay[] => {
   const hasTopNotify = overlays.some((o) => o.kind === 'notify' && o.pos === 'top-center');
   const used = new Set<Position>();
   return overlays.map((overlay) => {
@@ -82,13 +84,14 @@ const fixLayout = (overlays: Overlay[]): Overlay[] => {
     if (hasTopNotify && overlay.kind !== 'notify' && pos.startsWith('top-')) {
       pos = pos === 'top-right' ? 'bottom-right' : 'bottom-left';
     }
+    if (hasHook && pos.startsWith('bottom-')) pos = pos === 'bottom-right' ? 'middle-right' : 'middle-left';
     if (used.has(pos)) pos = POSITIONS.find((p) => !used.has(p) && !(hasTopNotify && p.startsWith('top-'))) ?? pos;
     used.add(pos);
     return { ...overlay, pos };
   });
 };
 
-type Draft = Episode & { category: string; ideas?: string[]; chosen_reason?: string };
+type Draft = Omit<Episode, 'highlight'> & { category: string; ideas?: string[]; chosen_reason?: string; highlight?: number | string };
 
 const validate = (draft: Draft): void => {
   if (!draft.slug || !/^[a-z0-9-]+$/.test(draft.slug)) throw new Error(`slug 형식이 틀렸습니다: ${draft.slug}`);
@@ -104,6 +107,7 @@ const validate = (draft: Draft): void => {
     }
   }
   if (!draft.title || !draft.cast || !draft.setting || !draft.caption) throw new Error('제목, 인물, 장소, 문구 중 빠진 것이 있습니다.');
+  if (!draft.hook || draft.hook.length > 22) throw new Error(`훅 문장이 없거나 너무 깁니다: ${draft.hook}`);
 };
 
 export const writeEpisode = async (made: MadeToon[], date: string): Promise<{ episode: Episode; category: string }> => {
@@ -133,7 +137,9 @@ export const writeEpisode = async (made: MadeToon[], date: string): Promise<{ ep
         mascot: true,
         cast: draft.cast,
         setting: draft.setting,
-        panels: draft.panels.map((p) => ({ scene: p.scene, overlays: fixLayout(p.overlays) })),
+        hook: draft.hook,
+        highlight: Number(draft.highlight) || 3,
+        panels: draft.panels.map((p, i) => ({ scene: p.scene, overlays: fixLayout(p.overlays, i === 0) })),
         caption: draft.caption,
       };
       console.log(`아이디어: ${(draft.ideas ?? []).join(' / ')}`);

@@ -7,13 +7,15 @@ import { spawn } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
-import { type Episode, OVERLAY_CSS, overlayHtml } from './template.ts';
+import { type Episode, hookHtml, OVERLAY_CSS, overlayHtml } from './template.ts';
 
 const WIDTH = 1080;
 const HEIGHT = 1920;
 const PANEL_TOP = 240;
 const FPS = 30;
 const FFMPEG = process.env.FFMPEG_PATH ?? 'ffmpeg';
+// 맨 앞에 가장 극적인 컷을 먼저 보여 주는 시간 (처음 1초 안에 멈추게 하는 훅)
+const INTRO = 0.8;
 
 // 컷마다 보여 줄 시간: 오버레이가 다 뜬 뒤 읽을 시간을 준다. 마지막 컷은 조금 더 길게
 const panelDurations = (episode: Episode): number[] =>
@@ -22,7 +24,14 @@ const panelDurations = (episode: Episode): number[] =>
     return Math.max(3, base) + (i === episode.panels.length - 1 ? 0.8 : 0);
   });
 
-const buildHtml = (episode: Episode, arts: string[], starts: number[], durations: number[], handle: string): string => `<!doctype html>
+const buildHtml = (
+  episode: Episode,
+  arts: string[],
+  starts: number[],
+  durations: number[],
+  handle: string,
+  highlight: number,
+): string => `<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
@@ -38,6 +47,10 @@ const buildHtml = (episode: Episode, arts: string[], starts: number[], durations
   .panel { inset: 0; }
   .panel img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 60%; }
   .panel .ov > * { scale: 0; }
+  /* 맨 앞 하이라이트: 가장 극적인 컷을 확 다가오게 보여 주고 흰 번쩍임으로 1컷에 넘긴다 */
+  .intro { position: absolute; inset: 0; overflow: hidden; }
+  .intro img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
   .title {
     position: absolute; top: 70px; left: 0; right: 0; text-align: center;
     font-family: 'Jua', sans-serif; font-size: 72px; color: #fff; text-shadow: 0 4px 16px rgba(0,0,0,0.5);
@@ -55,11 +68,14 @@ ${arts.map((art, i) => `<div class="bg" data-i="${i}"><img src="${art}" alt="" /
 <div class="frame">
 ${episode.panels
   .map(
-    (panel, i) => `<div class="panel" data-i="${i}"><img class="art" src="${arts[i]}" alt="" /><div class="ov">${panel.overlays
-      .map((o) => overlayHtml(o))
-      .join('')}</div></div>`,
+    (panel, i) => `<div class="panel" data-i="${i}"><img class="art" src="${arts[i]}" alt="" />${
+      i === 0 && episode.hook ? hookHtml(episode.hook) : ''
+    }<div class="ov">${panel.overlays.map((o) => overlayHtml(o)).join('')}</div></div>`,
   )
   .join('\n')}
+<div class="intro"><img class="art" src="${arts[highlight]}" alt="" /><div class="ovs">${episode.panels[highlight].overlays
+  .map((o) => overlayHtml(o))
+  .join('')}</div><div class="flash"></div></div>
 </div>
 <div class="handle">${handle}</div>
 <script>
@@ -68,13 +84,26 @@ ${episode.panels
   const clamp = (x) => Math.max(0, Math.min(1, x));
   // 살짝 넘쳤다가 돌아오는 튀어나오기
   const easeOutBack = (p) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+  const INTRO = ${INTRO};
+  const HIGHLIGHT = ${highlight};
   window.setTime = (t) => {
+    const intro = document.querySelector('.intro');
+    if (t < INTRO) {
+      // 1.15배에서 1배로 빠르게 다가오고, 끝나기 직전 흰 번쩍임
+      const p = t / INTRO;
+      intro.style.display = 'block';
+      intro.querySelector('img.art').style.transform = 'scale(' + (1.15 - 0.15 * Math.min(1, p * 1.6)) + ')';
+      intro.querySelector('.flash').style.opacity = String(clamp((p - 0.75) / 0.25) * 0.9);
+    } else {
+      intro.style.display = 'none';
+    }
+    t = t - INTRO;
     STARTS.forEach((s, i) => {
       const d = DURATIONS[i];
       const fade = i === 0 ? 1 : clamp((t - s) / 0.3);
       const visible = t >= s ? fade : 0;
       document.querySelector('.panel[data-i="' + i + '"]').style.opacity = visible;
-      document.querySelector('.bg[data-i="' + i + '"]').style.opacity = visible;
+      document.querySelector('.bg[data-i="' + i + '"]').style.opacity = t < 0 ? (i === HIGHLIGHT ? 1 : 0) : visible;
       const art = document.querySelector('.panel[data-i="' + i + '"] img.art');
       art.style.transform = 'scale(' + (1 + 0.06 * clamp((t - s) / d)) + ')';
       const items = document.querySelectorAll('.panel[data-i="' + i + '"] .ov > *');
@@ -109,8 +138,10 @@ export const makeMotionReel = async (
   );
   const durations = panelDurations(episode);
   const starts = durations.map((_, i) => durations.slice(0, i).reduce((a, b) => a + b, 0));
-  const total = starts[starts.length - 1] + durations[durations.length - 1];
-  const html = buildHtml(episode, arts, starts, durations, options.handle ?? '@utppang');
+  const total = INTRO + starts[starts.length - 1] + durations[durations.length - 1];
+  // 하이라이트 컷: 대본이 정한 번호(1부터), 없으면 3컷
+  const highlight = Math.min(Math.max((episode.highlight ?? 3) - 1, 0), episode.panels.length - 1);
+  const html = buildHtml(episode, arts, starts, durations, options.handle ?? '@utppang', highlight);
 
   await mkdir(path.dirname(outFile), { recursive: true });
   const channel = process.env.CI ? undefined : 'msedge';

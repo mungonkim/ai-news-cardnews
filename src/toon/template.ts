@@ -23,6 +23,10 @@ export type Episode = {
   title: string;
   // true면 고정 주인공 웃빵이 나온다 (2026-10-15부터 매일 편). cast는 조연 설명
   mascot?: boolean;
+  // 1컷 아래쪽에 크게 얹는 공감 한 줄 (피드에서 멈추게 하는 훅, 16자 안팎)
+  hook?: string;
+  // 릴스 맨 앞 0.8초에 먼저 보여 줄 가장 극적인 컷 번호 (1부터, 없으면 3컷)
+  highlight?: number;
   // 컷마다 같은 인물로 그리도록 매번 붙이는 인물 설명
   cast: string;
   setting: string;
@@ -98,10 +102,19 @@ export const OVERLAY_CSS = `
   .notify-icon { font-size: 56px; }
   .notify-sender { font-size: 32px; font-weight: 700; color: #6b6b70; }
   .notify-text { font-size: 46px; font-weight: 800; color: #1d1d1f; margin-top: 4px; }
+  /* 1컷 훅: 아래쪽 어두운 그라데이션 위에 큰 글씨 */
+  .hook {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 120px 60px 80px; text-align: center;
+    background: linear-gradient(to top, rgba(20,20,22,0.82), rgba(20,20,22,0.55) 60%, rgba(20,20,22,0));
+    font-family: 'Jua', sans-serif; font-size: 78px; line-height: 1.25; color: #fff; word-break: keep-all;
+    text-shadow: 0 3px 12px rgba(0,0,0,0.45);
+  }
 `;
 
-// image는 data 주소, index는 0부터
-export const buildPanelHtml = (image: string, panel: Panel, index: number, total: number): string => `<!doctype html>
+export const hookHtml = (hook: string): string => `<div class="hook">${escapeHtml(hook)}</div>`;
+
+// image는 data 주소, index는 0부터. hook을 주면 아래쪽에 크게 얹는다 (1컷용)
+export const buildPanelHtml = (image: string, panel: Panel, index: number, total: number, hook?: string): string => `<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
@@ -122,6 +135,7 @@ ${OVERLAY_CSS}
 <body>
 <div class="frame">
   <img class="art" src="${image}" alt="" />
+  ${hook ? hookHtml(hook) : ''}
   ${panel.overlays.map(overlayHtml).join('\n  ')}
   <div class="page">${index + 1} / ${total}</div>
 </div>

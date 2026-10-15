@@ -130,7 +130,7 @@ const renderPanels = async (
       // 원본 그림도 남겨 둔다 (말풍선 위치만 바꿔 다시 렌더할 때 쓴다)
       await writeFile(path.join(outDir, `art-${String(i + 1).padStart(2, '0')}.png`), images[n]);
       const dataUrl = `data:image/png;base64,${images[n].toString('base64')}`;
-      await page.setContent(buildPanelHtml(dataUrl, episode.panels[i], i, episode.panels.length), {
+      await page.setContent(buildPanelHtml(dataUrl, episode.panels[i], i, episode.panels.length, i === 0 ? episode.hook : undefined), {
         waitUntil: 'networkidle',
       });
       await page.evaluate(() => document.fonts.ready);
