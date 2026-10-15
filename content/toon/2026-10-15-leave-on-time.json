@@ -28,7 +28,7 @@
     {
       "scene": "벽에 걸린 둥근 시계가 정확히 6시를 가리킨다(숫자 없는 시계판). 그 아래 주인공이 체념한 얼굴로 다시 의자에 앉는다.",
       "overlays": [
-        { "kind": "caption", "text": "18:00", "pos": "top-left" },
+        { "kind": "caption", "text": "18:00", "pos": "bottom-left" },
         { "kind": "notify", "sender": "팀장님", "text": "간단한 거예요 ^^", "pos": "top-center" }
       ]
     },

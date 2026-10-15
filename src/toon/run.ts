@@ -4,6 +4,7 @@
 //     그림체마다 1컷과 3컷만 만든다 (1컷을 기준으로 3컷을 그려서 인물이 이어지는지도 본다)
 //   한 편 전체: node src/toon/run.ts --episode content/toon/xxx.json --mode full --style A
 //   API 없이 배치만 확인: --placeholder assets/sitcom/base.png (그림 대신 이 이미지를 쓴다, 슬랙 안 보냄)
+//   이미 그린 그림에 말풍선만 다시 얹기: --mode full --art-dir <art-01.png가 있는 폴더> (그림 비용 없음)
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
@@ -134,12 +135,15 @@ const main = async (): Promise<void> => {
       mode: { type: 'string', default: 'style-test' },
       style: { type: 'string', default: 'A' },
       placeholder: { type: 'string' },
+      'art-dir': { type: 'string' },
     },
   });
   if (!values.episode) throw new Error('--episode 대본 경로가 필요합니다.');
   const episode = JSON.parse(await readFile(values.episode, 'utf-8')) as Episode;
   const placeholder = values.placeholder ? await readFile(values.placeholder) : undefined;
-  const sendSlack = !placeholder;
+  const artDir = values['art-dir'];
+  // 임시 그림일 때와 슬랙 설정이 없는 내 컴퓨터에서는 보내지 않는다
+  const sendSlack = !placeholder && Boolean(process.env.SLACK_BOT_TOKEN);
   const started = Date.now();
 
   if (values.mode === 'style-test') {
@@ -169,7 +173,9 @@ const main = async (): Promise<void> => {
     const style = values.style ?? 'A';
     if (!STYLES[style]) throw new Error(`없는 그림체입니다: ${style}`);
     const indexes = episode.panels.map((_, i) => i);
-    const images = await drawPanels(episode, indexes, style, placeholder);
+    const images = artDir
+      ? await Promise.all(indexes.map((i) => readFile(path.join(artDir, `art-${String(i + 1).padStart(2, '0')}.png`))))
+      : await drawPanels(episode, indexes, style, placeholder);
     const outDir = path.join('output', 'toon', episode.slug, 'full');
     const files = await renderPanels(episode, indexes, images, outDir);
     const captionFile = path.join(outDir, 'caption.txt');
