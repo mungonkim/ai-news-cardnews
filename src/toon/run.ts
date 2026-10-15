@@ -2,6 +2,8 @@
 // 사용법:
 //   그림체 시험: node src/toon/run.ts --episode content/toon/xxx.json --mode style-test
 //     그림체마다 1컷과 3컷만 만든다 (1컷을 기준으로 3컷을 그려서 인물이 이어지는지도 본다)
+//   매일: node src/toon/run.ts --mode daily [--skip-if-done]  (Claude가 새 대본을 쓰고 한 편을 만들어 data/toon-made.json에 기록)
+//   프로필 사진 후보: node src/toon/run.ts --mode profile
 //   한 편 전체: node src/toon/run.ts --episode content/toon/xxx.json --mode full --style A
 //   API 없이 배치만 확인: --placeholder assets/sitcom/base.png (그림 대신 이 이미지를 쓴다, 슬랙 안 보냄)
 //   이미 그린 그림에 말풍선만 다시 얹기: --mode full --art-dir <art-01.png가 있는 폴더> (그림 비용 없음)
@@ -12,6 +14,7 @@ import { chromium } from 'playwright-core';
 import { generateWithRetry } from '../pipeline/images.ts';
 import { sendCards, sendText } from '../pipeline/slack.ts';
 import { buildPanelHtml, type Episode, type Panel } from './template.ts';
+import { type MadeToon, writeEpisode } from './write.ts';
 
 const WIDTH = 1080;
 const HEIGHT = 1440;
@@ -19,11 +22,13 @@ const HEIGHT = 1440;
 const IMAGE_SIZE = '1056x1408';
 const IMAGE_MODEL = process.env.IMAGE_MODEL ?? 'gpt-image-2';
 const IMAGE_QUALITY = process.env.IMAGE_QUALITY ?? 'medium';
+// 매일 만든 편 기록 (중복 소재 피하기, 하루 한 번만 만들기)
+const MADE_PATH = path.join('data', 'toon-made.json');
 
 // 그림체 후보. 시험 결과를 보고 하나를 고른다.
 const STYLES: Record<string, string> = {
   A: '심플한 한국 인스타툰 그림체. 굵고 깔끔한 검은 외곽선, 동글동글하고 단순한 2~3등신 캐릭터, 파스텔 톤의 평평한 단색 채색, 그림자 거의 없음, 배경은 꼭 필요한 사물만 단순하게.',
-  B: '현대 한국 웹툰 그림체. 깔끔한 선화와 셀 채색, 자연스러운 6등신 인물, 과장된 표정 연출, 사무실 배경을 적당히 자세하게.',
+  B: '현대 한국 웹툰 그림체. 깔끔한 선화와 셀 채색, 자연스러운 6등신 인물, 과장된 표정 연출, 배경을 적당히 자세하게.',
   C: '손으로 그린 낙서 감성 그림체. 연필 · 크레용 질감의 삐뚤빼뚤한 선, 아주 단순한 캐릭터, 흰 종이 배경에 부분적으로만 색칠.',
 };
 
@@ -128,6 +133,79 @@ const renderPanels = async (
   return files;
 };
 
+// 한 편 전체를 그리고(또는 저장된 그림을 쓰고) 말풍선을 얹어 슬랙으로 보낸다
+const makeFull = async (
+  episode: Episode,
+  style: string,
+  opts: { artDir?: string; placeholder?: Buffer; sendSlack: boolean; note?: string },
+): Promise<string[]> => {
+  if (!STYLES[style]) throw new Error(`없는 그림체입니다: ${style}`);
+  const indexes = episode.panels.map((_, i) => i);
+  const { artDir } = opts;
+  const images = artDir
+    ? await Promise.all(indexes.map((i) => readFile(path.join(artDir, `art-${String(i + 1).padStart(2, '0')}.png`))))
+    : await drawPanels(episode, indexes, style, opts.placeholder);
+  const outDir = path.join('output', 'toon', episode.slug, 'full');
+  const files = await renderPanels(episode, indexes, images, outDir);
+  const captionFile = path.join(outDir, 'caption.txt');
+  await writeFile(captionFile, episode.caption);
+  files.forEach((f) => console.log(`저장: ${f}`));
+  if (opts.sendSlack) {
+    await sendCards(
+      [...files, captionFile],
+      `🖍️ 오늘의 툰 「${episode.title}」 (${files.length}컷)${opts.note ? `\n${opts.note}` : ''}\n문구는 맨 아래 텍스트 파일에서 복사하세요.`,
+    );
+  }
+  return files;
+};
+
+const today = (): string => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+
+// 매일: 새 대본 쓰기 → 저장 → 한 편 만들기 → 기록
+const runDaily = async (style: string, skipIfDone: boolean, sendSlack: boolean): Promise<void> => {
+  const date = today();
+  const made = JSON.parse(await readFile(MADE_PATH, 'utf-8').catch(() => '[]')) as MadeToon[];
+  if (skipIfDone && made.some((m) => m.date === date)) {
+    console.log(`오늘(${date}) 툰은 이미 만들었습니다. 건너뜁니다.`);
+    return;
+  }
+  const { episode, category } = await writeEpisode(made, date);
+  const episodePath = path.join('content', 'toon', `${episode.slug}.json`);
+  await writeFile(episodePath, `${JSON.stringify(episode, null, 2)}\n`);
+  console.log(`대본 저장: ${episodePath} (${category}) 「${episode.title}」`);
+  await makeFull(episode, style, { sendSlack, note: `분야: ${category}` });
+  made.push({ date, slug: episode.slug, title: episode.title, category });
+  await writeFile(MADE_PATH, `${JSON.stringify(made, null, 2)}\n`);
+};
+
+// 프로필 사진 후보 3가지 (정사각형, 원형으로 잘려도 얼굴이 가운데)
+const PROFILE_CONCEPTS = [
+  '동글동글한 2~3등신 사람 캐릭터 하나가 웃는 입과 눈가의 눈물 한 방울로 "웃기고 슬픈" 표정을 짓고 정면을 본다. 손에 크레용을 쥐고 있다.',
+  '동글동글한 아기 고양이 캐릭터가 이불을 머리까지 덮고 얼굴만 내민 채 웃픈 표정을 짓는다.',
+  '말랑한 식빵 모양 캐릭터에 작은 팔다리와 얼굴이 있고, 웃는 입과 눈물 한 방울로 웃픈 표정을 짓는다.',
+];
+
+const runProfile = async (style: string, sendSlack: boolean): Promise<void> => {
+  const outDir = path.join('output', 'toon', 'profile');
+  await mkdir(outDir, { recursive: true });
+  const files = await Promise.all(
+    PROFILE_CONCEPTS.map(async (concept, i) => {
+      const prompt = [
+        `그림체: ${STYLES[style]}`,
+        `인스타그램 프로필 사진용 정사각형 그림. ${concept}`,
+        '캐릭터 얼굴을 화면 가운데에 크게 두고, 원형으로 잘려도 잘 보이게 가장자리는 비운다. 배경은 밝은 파스텔 단색 하나.',
+        '글자, 숫자, 로고, 워터마크를 넣지 말 것. 실존 인물을 닮은 얼굴 금지.',
+      ].join('\n');
+      const image = await generateWithRetry(prompt, '1024x1024');
+      const file = path.join(outDir, `profile-${i + 1}.png`);
+      await writeFile(file, image);
+      return file;
+    }),
+  );
+  files.forEach((f) => console.log(`저장: ${f}`));
+  if (sendSlack) await sendCards(files, '🖼️ 프로필 사진 후보 3가지 (사람 · 고양이 · 식빵)', ['후보 1 사람', '후보 2 고양이', '후보 3 식빵']);
+};
+
 const main = async (): Promise<void> => {
   const { values } = parseArgs({
     options: {
@@ -136,54 +214,50 @@ const main = async (): Promise<void> => {
       style: { type: 'string', default: 'A' },
       placeholder: { type: 'string' },
       'art-dir': { type: 'string' },
+      'skip-if-done': { type: 'boolean', default: false },
     },
   });
-  if (!values.episode) throw new Error('--episode 대본 경로가 필요합니다.');
-  const episode = JSON.parse(await readFile(values.episode, 'utf-8')) as Episode;
   const placeholder = values.placeholder ? await readFile(values.placeholder) : undefined;
-  const artDir = values['art-dir'];
   // 임시 그림일 때와 슬랙 설정이 없는 내 컴퓨터에서는 보내지 않는다
   const sendSlack = !placeholder && Boolean(process.env.SLACK_BOT_TOKEN);
+  const style = values.style ?? 'A';
   const started = Date.now();
 
-  if (values.mode === 'style-test') {
-    // 1컷과 3컷 (3컷이 없으면 마지막 컷)
-    const indexes = [0, Math.min(2, episode.panels.length - 1)];
-    const results = await Promise.allSettled(
-      Object.keys(STYLES).map(async (style) => {
-        const images = await drawPanels(episode, indexes, style, placeholder);
-        const files = await renderPanels(episode, indexes, images, path.join('output', 'toon', episode.slug, `style-${style}`));
-        return { style, files };
-      }),
-    );
-    for (const result of results) {
-      if (result.status === 'rejected') {
-        console.error('그림체 시험 실패:', result.reason);
-        if (sendSlack) await sendText(`🎨 툰 그림체 시험 중 하나가 실패했어요: ${String(result.reason).slice(0, 300)}`);
-        continue;
-      }
-      const { style, files } = result.value;
-      files.forEach((f) => console.log(`저장: ${f}`));
-      if (sendSlack) {
-        await sendCards(files, `🎨 툰 그림체 ${style}: ${STYLES[style].split('.')[0]}\n「${episode.title}」 1컷 · 3컷`, files.map((_, n) => `그림체 ${style} - ${n === 0 ? '1컷' : '3컷'}`));
-      }
-    }
-    if (results.every((r) => r.status === 'rejected')) throw new Error('모든 그림체 시험이 실패했습니다.');
-  } else if (values.mode === 'full') {
-    const style = values.style ?? 'A';
-    if (!STYLES[style]) throw new Error(`없는 그림체입니다: ${style}`);
-    const indexes = episode.panels.map((_, i) => i);
-    const images = artDir
-      ? await Promise.all(indexes.map((i) => readFile(path.join(artDir, `art-${String(i + 1).padStart(2, '0')}.png`))))
-      : await drawPanels(episode, indexes, style, placeholder);
-    const outDir = path.join('output', 'toon', episode.slug, 'full');
-    const files = await renderPanels(episode, indexes, images, outDir);
-    const captionFile = path.join(outDir, 'caption.txt');
-    await writeFile(captionFile, episode.caption);
-    files.forEach((f) => console.log(`저장: ${f}`));
-    if (sendSlack) await sendCards([...files, captionFile], `🖍️ 오늘의 툰 「${episode.title}」 (${files.length}컷, 그림체 ${style})\n문구는 맨 아래 텍스트 파일에서 복사하세요.`);
+  if (values.mode === 'daily') {
+    await runDaily(style, values['skip-if-done'] ?? false, sendSlack);
+  } else if (values.mode === 'profile') {
+    await runProfile(style, sendSlack);
   } else {
-    throw new Error(`알 수 없는 mode입니다: ${values.mode} (style-test 또는 full)`);
+    if (!values.episode) throw new Error('--episode 대본 경로가 필요합니다.');
+    const episode = JSON.parse(await readFile(values.episode, 'utf-8')) as Episode;
+    if (values.mode === 'style-test') {
+      // 1컷과 3컷 (3컷이 없으면 마지막 컷)
+      const indexes = [0, Math.min(2, episode.panels.length - 1)];
+      const results = await Promise.allSettled(
+        Object.keys(STYLES).map(async (s) => {
+          const images = await drawPanels(episode, indexes, s, placeholder);
+          const files = await renderPanels(episode, indexes, images, path.join('output', 'toon', episode.slug, `style-${s}`));
+          return { style: s, files };
+        }),
+      );
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          console.error('그림체 시험 실패:', result.reason);
+          if (sendSlack) await sendText(`🎨 툰 그림체 시험 중 하나가 실패했어요: ${String(result.reason).slice(0, 300)}`);
+          continue;
+        }
+        const { style: s, files } = result.value;
+        files.forEach((f) => console.log(`저장: ${f}`));
+        if (sendSlack) {
+          await sendCards(files, `🎨 툰 그림체 ${s}: ${STYLES[s].split('.')[0]}\n「${episode.title}」 1컷 · 3컷`, files.map((_, n) => `그림체 ${s} - ${n === 0 ? '1컷' : '3컷'}`));
+        }
+      }
+      if (results.every((r) => r.status === 'rejected')) throw new Error('모든 그림체 시험이 실패했습니다.');
+    } else if (values.mode === 'full') {
+      await makeFull(episode, style, { artDir: values['art-dir'], placeholder, sendSlack });
+    } else {
+      throw new Error(`알 수 없는 mode입니다: ${values.mode} (daily, profile, style-test, full)`);
+    }
   }
   console.log(`걸린 시간: ${Math.round((Date.now() - started) / 1000)}초`);
 };
