@@ -52,7 +52,16 @@ export const sendCards = async (files: string[], message: string, titles?: strin
     files: ids.map((id, i) => ({
       id,
       // 제목을 따로 주면 그대로 쓰고, 없으면 파일 종류로 정한다
-      title: titles?.[i] ?? files[i].endsWith('dm.txt') ? 'DM 자료 (댓글 단 분께 보내기)' : files[i].endsWith('.txt') ? '게시물 문구 원본 (여기서 복사)' : files[i].endsWith('.mp4') ? '릴스 영상 (음악은 앱에서 추가)' : `카드 ${i + 1}`,
+      // ??가 ? :보다 먼저 묶이므로 괄호로 감싼다 (괄호가 없으면 제목을 줘도 "DM 자료"가 된다)
+      title:
+        titles?.[i] ??
+        (files[i].endsWith('dm.txt')
+          ? 'DM 자료 (댓글 단 분께 보내기)'
+          : files[i].endsWith('.txt')
+            ? '게시물 문구 원본 (여기서 복사)'
+            : files[i].endsWith('.mp4')
+              ? '릴스 영상 (음악은 앱에서 추가)'
+              : `카드 ${i + 1}`),
     })),
     channel_id: channel,
     initial_comment: message,

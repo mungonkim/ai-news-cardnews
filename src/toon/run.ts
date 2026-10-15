@@ -4,6 +4,7 @@
 //     그림체마다 1컷과 3컷만 만든다 (1컷을 기준으로 3컷을 그려서 인물이 이어지는지도 본다)
 //   매일: node src/toon/run.ts --mode daily [--skip-if-done]  (Claude가 새 대본을 쓰고 한 편을 만들어 data/toon-made.json에 기록)
 //   프로필 사진 후보: node src/toon/run.ts --mode profile
+//   모션툰 릴스: node src/toon/run.ts --episode content/toon/xxx.json --mode reel --art-dir <art-01.png가 있는 폴더> (ffmpeg 필요, 그림 비용 없음)
 //   한 편 전체: node src/toon/run.ts --episode content/toon/xxx.json --mode full --style A
 //   API 없이 배치만 확인: --placeholder assets/sitcom/base.png (그림 대신 이 이미지를 쓴다, 슬랙 안 보냄)
 //   이미 그린 그림에 말풍선만 다시 얹기: --mode full --art-dir <art-01.png가 있는 폴더> (그림 비용 없음)
@@ -15,6 +16,7 @@ import { generateWithRetry } from '../pipeline/images.ts';
 import { sendCards, sendText } from '../pipeline/slack.ts';
 import { buildPanelHtml, type Episode, type Panel } from './template.ts';
 import { type MadeToon, writeEpisode } from './write.ts';
+import { makeMotionReel } from './motion.ts';
 
 const WIDTH = 1080;
 const HEIGHT = 1440;
@@ -262,10 +264,16 @@ const main = async (): Promise<void> => {
         }
       }
       if (results.every((r) => r.status === 'rejected')) throw new Error('모든 그림체 시험이 실패했습니다.');
+    } else if (values.mode === 'reel') {
+      const artDir = values['art-dir'];
+      if (!artDir) throw new Error('reel은 --art-dir(이미 그린 컷 그림 폴더)이 필요합니다.');
+      const [file] = await makeMotionReel(episode, artDir, path.join('output', 'toon', episode.slug, 'reel.mp4'));
+      if (sendSlack) await sendCards([file], `🎬 모션툰 릴스 「${episode.title}」
+음악은 인스타 앱에서 골라 넣으세요.`, ['릴스 영상 (음악은 앱에서 추가)']);
     } else if (values.mode === 'full') {
       await makeFull(episode, style, { artDir: values['art-dir'], placeholder, sendSlack });
     } else {
-      throw new Error(`알 수 없는 mode입니다: ${values.mode} (daily, profile, style-test, full)`);
+      throw new Error(`알 수 없는 mode입니다: ${values.mode} (daily, profile, style-test, full, reel)`);
     }
   }
   console.log(`걸린 시간: ${Math.round((Date.now() - started) / 1000)}초`);

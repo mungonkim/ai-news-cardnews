@@ -8,7 +8,7 @@ on:
         description: '대본 JSON 경로 (예: content/toon/2026-10-15-leave-on-time.json)'
         required: true
       mode:
-        description: 'style-test: 그림체 3가지로 1컷 · 3컷만 / full: 한 편 전체 / profile: 프로필 사진 후보 3장 (episode는 아무 값)'
+        description: 'style-test: 그림체 3가지로 1컷 · 3컷만 / full: 한 편 전체 / profile: 프로필 사진 후보 3장 (episode는 아무 값) / reel: 모션툰 릴스 (from_run 필요)'
         required: true
         default: 'style-test'
       style:
@@ -45,6 +45,10 @@ jobs:
       - name: 브라우저 설치
         run: npx playwright-core install --with-deps chromium
 
+      - name: 영상 편집 도구 설치 (릴스일 때)
+        if: github.event.inputs.mode == 'reel'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
       - name: 이전 실행의 그림 가져오기 (말풍선만 다시 얹을 때)
         if: github.event.inputs.from_run != ''
         uses: actions/download-artifact@v4
@@ -64,7 +68,9 @@ jobs:
           STYLE: ${{ github.event.inputs.style }}
           FROM_RUN: ${{ github.event.inputs.from_run }}
         run: |
-          if [ -n "$FROM_RUN" ]; then
+          if [ "$MODE" = "reel" ]; then
+            node src/toon/run.ts --episode "$EPISODE" --mode reel --art-dir "prev/$(basename "$EPISODE" .json)/full"
+          elif [ -n "$FROM_RUN" ]; then
             # 대본 파일 이름이 slug와 같다 (예: content/toon/2026-10-15-leave-on-time.json)
             node src/toon/run.ts --episode "$EPISODE" --mode full --style "$STYLE" --art-dir "prev/$(basename "$EPISODE" .json)/full"
           else

@@ -46,7 +46,7 @@ const POSITION_CSS: Record<Position, string> = {
   'bottom-right': 'bottom: 72px; right: 56px;',
 };
 
-const overlayHtml = (overlay: Overlay): string => {
+export const overlayHtml = (overlay: Overlay): string => {
   const style = POSITION_CSS[overlay.pos];
   const text = escapeHtml(overlay.text);
   switch (overlay.kind) {
@@ -66,18 +66,8 @@ const overlayHtml = (overlay: Overlay): string => {
   }
 };
 
-// image는 data 주소, index는 0부터
-export const buildPanelHtml = (image: string, panel: Panel, index: number, total: number): string => `<!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap" />
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { width: 1080px; height: 1440px; overflow: hidden; background: #fff; }
-  .frame { position: relative; width: 1080px; height: 1440px; }
-  .art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+// 말풍선 · 시간 상자 · 효과음 · 알림 스타일 (컷 이미지와 릴스가 함께 쓴다)
+export const OVERLAY_CSS = `
   .bubble {
     position: absolute; max-width: 560px; padding: 30px 40px;
     font-family: 'Jua', 'Pretendard Variable', sans-serif; font-size: 54px; line-height: 1.3; color: #1d1d1f;
@@ -108,6 +98,21 @@ export const buildPanelHtml = (image: string, panel: Panel, index: number, total
   .notify-icon { font-size: 56px; }
   .notify-sender { font-size: 32px; font-weight: 700; color: #6b6b70; }
   .notify-text { font-size: 46px; font-weight: 800; color: #1d1d1f; margin-top: 4px; }
+`;
+
+// image는 data 주소, index는 0부터
+export const buildPanelHtml = (image: string, panel: Panel, index: number, total: number): string => `<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1080px; height: 1440px; overflow: hidden; background: #fff; }
+  .frame { position: relative; width: 1080px; height: 1440px; }
+  .art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+${OVERLAY_CSS}
   .page {
     position: absolute; right: 40px; bottom: 28px; font-family: 'Pretendard Variable', sans-serif;
     font-size: 28px; font-weight: 700; color: rgba(255,255,255,0.9); text-shadow: 0 1px 6px rgba(0,0,0,0.5);

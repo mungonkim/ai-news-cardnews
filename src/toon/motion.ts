@@ -1,0 +1,163 @@
+// 모션툰 릴스: 이미 그린 컷 그림(art-XX.png)에 움직임을 줘서 세로 영상(1080x1920, 30fps)을 만든다.
+// - 컷마다 천천히 확대되고, 다음 컷은 부드럽게 겹쳐 나타난다
+// - 말풍선 · 알림 · 시간 상자는 하나씩 톡 튀어나오고, 효과음 글씨는 살짝 흔들린다
+// 시간(t)을 직접 정해 한 장씩 찍기 때문에 컴퓨터 속도와 상관없이 매번 같은 영상이 나온다.
+// 음악은 넣지 않는다. 인스타 앱에서 올릴 때 인기 음원을 고르는 편이 노출에 유리하고 저작권 문제도 없다.
+import { spawn } from 'node:child_process';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { chromium } from 'playwright-core';
+import { type Episode, OVERLAY_CSS, overlayHtml } from './template.ts';
+
+const WIDTH = 1080;
+const HEIGHT = 1920;
+const PANEL_TOP = 240;
+const FPS = 30;
+const FFMPEG = process.env.FFMPEG_PATH ?? 'ffmpeg';
+
+// 컷마다 보여 줄 시간: 오버레이가 다 뜬 뒤 읽을 시간을 준다. 마지막 컷은 조금 더 길게
+const panelDurations = (episode: Episode): number[] =>
+  episode.panels.map((panel, i) => {
+    const base = 0.6 + panel.overlays.length * 0.75 + 1.6;
+    return Math.max(3, base) + (i === episode.panels.length - 1 ? 0.8 : 0);
+  });
+
+const buildHtml = (episode: Episode, arts: string[], starts: number[], durations: number[], handle: string): string => `<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: ${WIDTH}px; height: ${HEIGHT}px; overflow: hidden; background: #1d1d1f; }
+  .bg, .panel { position: absolute; opacity: 0; }
+  .bg { inset: -80px; }
+  .bg img { width: 100%; height: 100%; object-fit: cover; filter: blur(40px) brightness(0.55); }
+  .frame { position: absolute; left: 0; top: ${PANEL_TOP}px; width: 1080px; height: 1440px; overflow: hidden; }
+  .panel { inset: 0; }
+  .panel img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 60%; }
+  .panel .ov > * { scale: 0; }
+  .title {
+    position: absolute; top: 70px; left: 0; right: 0; text-align: center;
+    font-family: 'Jua', sans-serif; font-size: 72px; color: #fff; text-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  }
+  .handle {
+    position: absolute; bottom: 70px; left: 0; right: 0; text-align: center;
+    font-family: 'Pretendard Variable', sans-serif; font-weight: 700; font-size: 38px; color: rgba(255,255,255,0.85);
+  }
+${OVERLAY_CSS}
+</style>
+</head>
+<body>
+${arts.map((art, i) => `<div class="bg" data-i="${i}"><img src="${art}" alt="" /></div>`).join('\n')}
+<div class="title">${episode.title.replace(/</g, '&lt;')}</div>
+<div class="frame">
+${episode.panels
+  .map(
+    (panel, i) => `<div class="panel" data-i="${i}"><img class="art" src="${arts[i]}" alt="" /><div class="ov">${panel.overlays
+      .map((o) => overlayHtml(o))
+      .join('')}</div></div>`,
+  )
+  .join('\n')}
+</div>
+<div class="handle">${handle}</div>
+<script>
+  const STARTS = ${JSON.stringify(starts)};
+  const DURATIONS = ${JSON.stringify(durations)};
+  const clamp = (x) => Math.max(0, Math.min(1, x));
+  // 살짝 넘쳤다가 돌아오는 튀어나오기
+  const easeOutBack = (p) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+  window.setTime = (t) => {
+    STARTS.forEach((s, i) => {
+      const d = DURATIONS[i];
+      const fade = i === 0 ? 1 : clamp((t - s) / 0.3);
+      const visible = t >= s ? fade : 0;
+      document.querySelector('.panel[data-i="' + i + '"]').style.opacity = visible;
+      document.querySelector('.bg[data-i="' + i + '"]').style.opacity = visible;
+      const art = document.querySelector('.panel[data-i="' + i + '"] img.art');
+      art.style.transform = 'scale(' + (1 + 0.06 * clamp((t - s) / d)) + ')';
+      const items = document.querySelectorAll('.panel[data-i="' + i + '"] .ov > *');
+      items.forEach((el, j) => {
+        const appear = s + 0.5 + j * 0.75;
+        const p = clamp((t - appear) / 0.3);
+        el.style.scale = p === 0 ? '0' : String(easeOutBack(p));
+        // 효과음은 나타난 뒤 0.5초 동안 좌우로 흔들린다
+        if (el.classList.contains('sfx')) {
+          const k = t - appear;
+          const shake = k > 0 && k < 0.5 ? Math.sin(k * 60) * 10 * (1 - k / 0.5) : 0;
+          el.style.translate = shake + 'px 0';
+        }
+      });
+    });
+  };
+</script>
+</body>
+</html>`;
+
+const toDataUrl = (buffer: Buffer): string => `data:image/png;base64,${buffer.toString('base64')}`;
+
+// previewTimes를 주면 영상 대신 그 시각의 화면만 PNG로 저장한다 (ffmpeg 없는 컴퓨터에서 확인용)
+export const makeMotionReel = async (
+  episode: Episode,
+  artDir: string,
+  outFile: string,
+  options: { handle?: string; previewTimes?: number[] } = {},
+): Promise<string[]> => {
+  const arts = await Promise.all(
+    episode.panels.map(async (_, i) => toDataUrl(await readFile(path.join(artDir, `art-${String(i + 1).padStart(2, '0')}.png`)))),
+  );
+  const durations = panelDurations(episode);
+  const starts = durations.map((_, i) => durations.slice(0, i).reduce((a, b) => a + b, 0));
+  const total = starts[starts.length - 1] + durations[durations.length - 1];
+  const html = buildHtml(episode, arts, starts, durations, options.handle ?? '@utppang');
+
+  await mkdir(path.dirname(outFile), { recursive: true });
+  const channel = process.env.CI ? undefined : 'msedge';
+  const browser = await chromium.launch({ channel });
+  try {
+    const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT } });
+    await page.setContent(html, { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
+    const setTime = (t: number): Promise<void> =>
+      page.evaluate((time) => (window as unknown as { setTime: (x: number) => void }).setTime(time), t);
+
+    if (options.previewTimes) {
+      const files: string[] = [];
+      for (const t of options.previewTimes) {
+        await setTime(t);
+        const file = outFile.replace(/\.mp4$/, `-t${t}.png`);
+        await writeFile(file, await page.screenshot({ type: 'png' }));
+        files.push(file);
+      }
+      return files;
+    }
+
+    // 화면을 한 장씩 찍어 ffmpeg에 바로 흘려보낸다
+    const ffmpeg = spawn(
+      FFMPEG,
+      ['-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', outFile],
+      { stdio: ['pipe', 'ignore', 'pipe'] },
+    );
+    let stderr = '';
+    ffmpeg.stderr.on('data', (chunk: Buffer) => {
+      stderr = (stderr + chunk.toString()).slice(-2000);
+    });
+    const done = new Promise<void>((resolve, reject) => {
+      ffmpeg.on('error', reject);
+      ffmpeg.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`ffmpeg 종료 코드 ${code}: ${stderr.slice(-500)}`))));
+    });
+    const frames = Math.ceil(total * FPS);
+    for (let f = 0; f < frames; f += 1) {
+      await setTime(f / FPS);
+      const jpeg = await page.screenshot({ type: 'jpeg', quality: 92 });
+      if (!ffmpeg.stdin.write(jpeg)) await new Promise((r) => ffmpeg.stdin.once('drain', r));
+    }
+    ffmpeg.stdin.end();
+    await done;
+    console.log(`릴스 영상: ${outFile} (${total.toFixed(1)}초, ${frames}프레임)`);
+    return [outFile];
+  } finally {
+    await browser.close();
+  }
+};
