@@ -36,14 +36,20 @@ const RULES =
   // 첫 시험(10/15)에서 "위쪽 4분의 1을 비워라"고 했더니 절반 가까이 비워서 인물이 작아졌다 → 비우는 범위를 줄이고 인물 크기를 정한다
   '세로 3:4 한 컷 만화. 맨 위 15% 정도만 벽이나 하늘처럼 단순하게 두고(말풍선 자리), 나머지는 장면으로 꽉 채울 것. 인물은 상반신 위주로 크게, 화면 높이의 절반 이상을 차지하게 그리고 표정이 잘 보이게 할 것. 그림 안에 글자, 숫자, 말풍선, 효과음 글씨, 로고, 워터마크를 절대 넣지 말 것. 실존 인물을 닮은 얼굴 금지.';
 
-const buildPrompt = (episode: Episode, panel: Panel, style: string, withReference: boolean): string =>
+// 고정 주인공 웃빵 (2026-10-15 사용자 결정, 프로필 사진과 같은 캐릭터). 매 컷 이 그림을 첫 번째 기준 그림으로 넣는다.
+const MASCOT_PATH = path.join('assets', 'toon', 'utbbang.png');
+const MASCOT_RULE =
+  '주인공 "웃빵": 함께 준 첫 번째 그림의 식빵 캐릭터다. 식빵 모양 몸, 갈색 테두리, 크림색 얼굴, 까만 점 눈, 분홍 입, 작은 팔다리를 그대로 유지한다. 사람 크기로 의인화되어 사람들 사이에서 평범하게 생활한다. 장면에 맞게 옷이나 소품(사원증, 가방, 이불, 휴대폰 등)을 걸치거나 들 수 있지만 몸의 모양과 색은 바꾸지 않는다. 표정은 장면에 맞게 과장해도 된다.';
+
+const buildPrompt = (episode: Episode, panel: Panel, style: string, withPrevPanel: boolean): string =>
   [
     `그림체: ${STYLES[style]}`,
-    `등장인물: ${episode.cast}`,
+    episode.mascot ? MASCOT_RULE : '',
+    `${episode.mascot ? '조연' : '등장인물'}: ${episode.cast}`,
     `장소: ${episode.setting}`,
     `이 컷의 장면: ${panel.scene}`,
-    withReference
-      ? '함께 준 그림은 같은 만화의 앞 컷이다. 인물의 얼굴, 머리 모양, 옷, 그림체, 색감을 그대로 유지하고 장면만 새로 그릴 것.'
+    withPrevPanel
+      ? `함께 준 ${episode.mascot ? '두 번째 ' : ''}그림은 같은 만화의 앞 컷이다. 인물의 얼굴, 머리 모양, 옷, 그림체, 색감을 그대로 유지하고 장면만 새로 그릴 것.`
       : '',
     RULES,
   ]
@@ -52,8 +58,8 @@ const buildPrompt = (episode: Episode, panel: Panel, style: string, withReferenc
 
 type ImageResponse = { data?: { b64_json?: string }[]; error?: { message?: string } };
 
-// 기준 그림을 함께 넣어 새 컷을 그린다 (images/edits, JSON 본문)
-const editOnce = async (prompt: string, reference: Buffer): Promise<Buffer> => {
+// 기준 그림들을 함께 넣어 새 컷을 그린다 (images/edits, JSON 본문)
+const editOnce = async (prompt: string, references: Buffer[]): Promise<Buffer> => {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('OPENAI_API_KEY가 설정되지 않았습니다.');
   const response = await fetch('https://api.openai.com/v1/images/edits', {
@@ -62,7 +68,7 @@ const editOnce = async (prompt: string, reference: Buffer): Promise<Buffer> => {
     body: JSON.stringify({
       model: IMAGE_MODEL,
       prompt,
-      images: [{ image_url: `data:image/png;base64,${reference.toString('base64')}` }],
+      images: references.map((r) => ({ image_url: `data:image/png;base64,${r.toString('base64')}` })),
       size: IMAGE_SIZE,
       quality: IMAGE_QUALITY,
       n: 1,
@@ -77,16 +83,17 @@ const editOnce = async (prompt: string, reference: Buffer): Promise<Buffer> => {
   return Buffer.from(b64, 'base64');
 };
 
-const editWithRetry = async (prompt: string, reference: Buffer): Promise<Buffer> => {
+const editWithRetry = async (prompt: string, references: Buffer[]): Promise<Buffer> => {
   try {
-    return await editOnce(prompt, reference);
+    return await editOnce(prompt, references);
   } catch (error) {
     console.warn('컷 그림을 다시 시도합니다:', error instanceof Error ? error.message : error);
-    return editOnce(prompt, reference);
+    return editOnce(prompt, references);
   }
 };
 
-// 첫 컷은 새로 그리고, 나머지 컷은 첫 컷을 기준 그림으로 넣어 동시에 그린다
+// 첫 컷을 먼저 그리고, 나머지 컷은 첫 컷을 기준 그림으로 넣어 동시에 그린다.
+// 웃빵이 나오는 편은 모든 컷에 웃빵 그림을 첫 번째 기준 그림으로 함께 넣는다.
 const drawPanels = async (
   episode: Episode,
   indexes: number[],
@@ -94,10 +101,12 @@ const drawPanels = async (
   placeholder: Buffer | undefined,
 ): Promise<Buffer[]> => {
   if (placeholder) return indexes.map(() => placeholder);
+  const mascot = episode.mascot ? [await readFile(MASCOT_PATH)] : [];
   const [first, ...rest] = indexes;
-  const firstImage = await generateWithRetry(buildPrompt(episode, episode.panels[first], style, false), IMAGE_SIZE);
+  const firstPrompt = buildPrompt(episode, episode.panels[first], style, false);
+  const firstImage = mascot.length > 0 ? await editWithRetry(firstPrompt, mascot) : await generateWithRetry(firstPrompt, IMAGE_SIZE);
   const restImages = await Promise.all(
-    rest.map((i) => editWithRetry(buildPrompt(episode, episode.panels[i], style, true), firstImage)),
+    rest.map((i) => editWithRetry(buildPrompt(episode, episode.panels[i], style, true), [...mascot, firstImage])),
   );
   return [firstImage, ...restImages];
 };

@@ -21,6 +21,8 @@ export type Panel = { scene: string; overlays: Overlay[] };
 export type Episode = {
   slug: string;
   title: string;
+  // true면 고정 주인공 웃빵이 나온다 (2026-10-15부터 매일 편). cast는 조연 설명
+  mascot?: boolean;
   // 컷마다 같은 인물로 그리도록 매번 붙이는 인물 설명
   cast: string;
   setting: string;
