@@ -16,7 +16,8 @@ export type Overlay =
   // 메신저 알림 (보낸 사람 + 한 줄)
   | { kind: 'notify'; sender: string; text: string; pos: Position };
 
-export type Panel = { scene: string; overlays: Overlay[] };
+// narration: 컷 위쪽 흰 공간에 쓰는 웃빵의 속마음 2~3줄 (있으면 위는 글, 아래는 그림으로 나눈다. 2026-10-16 사용자 요청: 장마다 읽는 맛)
+export type Panel = { scene: string; overlays: Overlay[]; narration?: string };
 
 export type Episode = {
   slug: string;
@@ -38,6 +39,12 @@ export type Episode = {
 const escapeHtml = (text: string): string =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+// 줄바꿈은 <br>로
+const textHtml = (text: string): string => escapeHtml(text).replace(/\n/g, '<br>');
+
+// 말풍선 꼬리는 말풍선이 놓인 쪽으로 (왼쪽 말풍선은 왼쪽 아래, 오른쪽은 오른쪽 아래)
+const tailClass = (pos: Position): string => (pos.endsWith('left') ? 'tail-left' : pos.endsWith('right') ? 'tail-right' : 'tail-center');
+
 // 위치별 좌표 (가장자리에서 조금 띄운다)
 const POSITION_CSS: Record<Position, string> = {
   'top-left': 'top: 56px; left: 56px;',
@@ -52,10 +59,10 @@ const POSITION_CSS: Record<Position, string> = {
 
 export const overlayHtml = (overlay: Overlay): string => {
   const style = POSITION_CSS[overlay.pos];
-  const text = escapeHtml(overlay.text);
+  const text = textHtml(overlay.text);
   switch (overlay.kind) {
     case 'speech':
-      return `<div class="bubble speech" style="${style}">${text}</div>`;
+      return `<div class="bubble speech ${tailClass(overlay.pos)}" style="${style}">${text}</div>`;
     case 'thought':
       return `<div class="bubble thought" style="${style}">${text}</div>`;
     case 'caption':
@@ -73,8 +80,8 @@ export const overlayHtml = (overlay: Overlay): string => {
 // 말풍선 · 시간 상자 · 효과음 · 알림 스타일 (컷 이미지와 릴스가 함께 쓴다)
 export const OVERLAY_CSS = `
   .bubble {
-    position: absolute; max-width: 560px; padding: 30px 40px;
-    font-family: 'Jua', 'Pretendard Variable', sans-serif; font-size: 54px; line-height: 1.3; color: #1d1d1f;
+    position: absolute; max-width: 640px; padding: 28px 40px;
+    font-family: 'Jua', 'Pretendard Variable', sans-serif; font-size: 50px; line-height: 1.32; color: #1d1d1f;
     background: #fff; border: 5px solid #1d1d1f; word-break: keep-all;
   }
   .speech { border-radius: 48px; box-shadow: 6px 8px 0 rgba(0,0,0,0.18); }
@@ -84,6 +91,8 @@ export const OVERLAY_CSS = `
     background: #fff; border-right: 5px solid #1d1d1f; border-bottom: 5px solid #1d1d1f;
     transform: translateX(-50%) rotate(45deg) skew(12deg, 12deg);
   }
+  .speech.tail-left::after { left: 26%; }
+  .speech.tail-right::after { left: 74%; }
   .thought { border-radius: 999px; border-style: dashed; }
   .caption {
     position: absolute; padding: 14px 28px; border-radius: 16px;
@@ -111,6 +120,9 @@ export const OVERLAY_CSS = `
   }
 `;
 
+// 독백이 있는 컷에서 위쪽 글 영역 높이 (아래 1060px이 그림)
+export const STORY_HEIGHT = 380;
+
 export const hookHtml = (hook: string): string => `<div class="hook">${escapeHtml(hook)}</div>`;
 
 // image는 data 주소, index는 0부터. hook을 주면 아래쪽에 크게 얹는다 (1컷용)
@@ -123,7 +135,13 @@ export const buildPanelHtml = (image: string, panel: Panel, index: number, total
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { width: 1080px; height: 1440px; overflow: hidden; background: #fff; }
-  .frame { position: relative; width: 1080px; height: 1440px; }
+  .frame { position: relative; width: 1080px; height: 1440px; background: #fffdf8; }
+  .stage { position: absolute; left: 0; right: 0; bottom: 0; overflow: hidden; }
+  .story {
+    position: absolute; left: 0; right: 0; top: 0; height: ${STORY_HEIGHT}px; display: flex; align-items: center;
+    padding: 40px 76px 24px; font-family: 'Pretendard Variable', sans-serif; font-weight: 600; font-size: 52px;
+    line-height: 1.5; color: #232326; word-break: keep-all; letter-spacing: -0.5px;
+  }
   .art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 ${OVERLAY_CSS}
   .page {
@@ -134,9 +152,12 @@ ${OVERLAY_CSS}
 </head>
 <body>
 <div class="frame">
-  <img class="art" src="${image}" alt="" />
-  ${hook ? hookHtml(hook) : ''}
-  ${panel.overlays.map(overlayHtml).join('\n  ')}
+  ${panel.narration ? `<div class="story"><div>${textHtml(panel.narration)}</div></div>` : ''}
+  <div class="stage" style="top: ${panel.narration ? STORY_HEIGHT : 0}px">
+    <img class="art" src="${image}" alt="" />
+    ${hook ? hookHtml(hook) : ''}
+    ${panel.overlays.map(overlayHtml).join('\n    ')}
+  </div>
   <div class="page">${index + 1} / ${total}</div>
 </div>
 </body>
