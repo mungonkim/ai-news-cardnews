@@ -4,6 +4,7 @@
 //     그림체마다 1컷과 3컷만 만든다 (1컷을 기준으로 3컷을 그려서 인물이 이어지는지도 본다)
 //   매일: node src/toon/run.ts --mode daily [--skip-if-done]  (Claude가 새 대본을 쓰고 한 편을 만들어 data/toon-made.json에 기록)
 //   프로필 사진 후보: node src/toon/run.ts --mode profile
+//   춤 영상용 웃빵 전신 그림: node src/toon/run.ts --mode pose
 //   모션툰 릴스: node src/toon/run.ts --episode content/toon/xxx.json --mode reel --art-dir <art-01.png가 있는 폴더> (ffmpeg 필요, 그림 비용 없음)
 //   한 편 전체: node src/toon/run.ts --episode content/toon/xxx.json --mode full --style A
 //   API 없이 배치만 확인: --placeholder assets/sitcom/base.png (그림 대신 이 이미지를 쓴다, 슬랙 안 보냄)
@@ -205,6 +206,39 @@ const PROFILE_CONCEPTS = [
   '말랑한 식빵 모양 캐릭터에 작은 팔다리와 얼굴이 있고, 웃는 입과 눈물 한 방울로 웃픈 표정을 짓는다.',
 ];
 
+// 춤 영상(모션 컨트롤)용 웃빵 전신 그림. 원본 웃빵은 식빵 한 장이 얼굴이자 몸이라
+// "상반신이 감지되지 않았어요"(Higgsfield, 2026-10-16)가 나온다 → 머리 · 어깨 · 상체 · 팔다리가 구분되는 전신으로 그린다
+const POSE_CONCEPTS = [
+  '웃빵의 식빵 몸이 머리 역할을 하고, 그 아래에 짧은 목과 뚜렷한 어깨, 크림색 맨투맨을 입은 상체, 팔 두 개, 청바지를 입은 다리 두 개가 있다.',
+  '웃빵이 노란 후드티와 검은 트레이닝 바지를 입은 전신. 식빵 얼굴이 후드 위로 나와 있고 어깨선과 팔다리가 사람처럼 뚜렷하다.',
+  '웃빵 얼굴 모양의 큰 머리를 한 마스코트 인형 같은 전신. 둥근 어깨, 흰 티셔츠를 입은 상체, 팔다리가 뚜렷하고 운동화를 신었다.',
+];
+
+const runPose = async (style: string, sendSlack: boolean): Promise<void> => {
+  const outDir = path.join('output', 'toon', 'pose');
+  await mkdir(outDir, { recursive: true });
+  const mascot = [await readFile(MASCOT_PATH)];
+  const files = await Promise.all(
+    POSE_CONCEPTS.map(async (concept, i) => {
+      const prompt = [
+        `그림체: ${STYLES[style]}`,
+        '함께 준 그림의 식빵 캐릭터 "웃빵"의 얼굴(까만 점 눈, 분홍 입, 눈물 한 방울, 갈색 테두리)과 색을 그대로 유지한다.',
+        `춤 영상의 기준 사진으로 쓸 세로 9:16 전신 그림. ${concept}`,
+        '정면을 보고 똑바로 서서 양팔을 몸 옆에서 살짝 벌린 자세. 머리부터 발끝까지 화면 안에 모두 보이고, 머리 · 어깨 · 상체 · 팔 · 다리가 서로 겹치지 않게 분명히 구분된다. 배경은 밝은 단색 하나.',
+        '글자, 숫자, 로고, 워터마크를 넣지 말 것. 실존 인물을 닮은 얼굴 금지.',
+      ].join('\n');
+      const image = await editWithRetry(prompt, mascot, '1008x1792');
+      const file = path.join(outDir, `pose-${i + 1}.png`);
+      await writeFile(file, image);
+      return file;
+    }),
+  );
+  files.forEach((f) => console.log(`저장: ${f}`));
+  if (sendSlack) {
+    await sendCards(files, '🕺 춤 영상용 웃빵 전신 그림 3가지 (머리 · 어깨 · 상체가 보이게)', ['전신 1 맨투맨', '전신 2 후드티', '전신 3 마스코트']);
+  }
+};
+
 const runProfile = async (style: string, sendSlack: boolean): Promise<void> => {
   const outDir = path.join('output', 'toon', 'profile');
   await mkdir(outDir, { recursive: true });
@@ -245,6 +279,8 @@ const main = async (): Promise<void> => {
 
   if (values.mode === 'daily') {
     await runDaily(style, values['skip-if-done'] ?? false, sendSlack);
+  } else if (values.mode === 'pose') {
+    await runPose(style, sendSlack);
   } else if (values.mode === 'profile') {
     await runProfile(style, sendSlack);
   } else {

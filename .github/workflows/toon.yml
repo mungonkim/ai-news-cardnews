@@ -8,7 +8,7 @@ on:
         description: '대본 JSON 경로 (예: content/toon/2026-10-15-leave-on-time.json)'
         required: true
       mode:
-        description: 'style-test: 그림체 3가지로 1컷 · 3컷만 / full: 한 편 전체 / profile: 프로필 사진 후보 3장 (episode는 아무 값) / reel: 모션툰 릴스 (from_run 필요)'
+        description: 'style-test: 그림체 3가지로 1컷 · 3컷만 / full: 한 편 전체 / profile: 프로필 사진 후보 3장 (episode는 아무 값) / reel: 모션툰 릴스 (from_run 필요) / pose: 춤 영상용 웃빵 전신 3장 (episode는 아무 값)'
         required: true
         default: 'style-test'
       style:
