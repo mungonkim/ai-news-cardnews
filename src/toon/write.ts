@@ -35,7 +35,9 @@ const SYSTEM = `너는 한국 인스타그램의 인기 공감툰 작가다. 독
 좋은 공감툰의 조건:
 - 누구나 겪어 본 아주 구체적인 한 장면에서 시작한다 (막연한 "월요병"이 아니라 "일요일 밤 11시 59분에 천장 보기")
 - 컷이 넘어갈수록 상황이 조금씩 커지고, 마지막 컷에 반전이나 한 줄 펀치가 있다
-- 대사는 짧다. 한 말풍선에 22자 이내, 실제 사람이 하는 말투
+- 장마다 읽는 맛이 있어야 한다 (2026-10-16 사용자 요청: 글이 너무 적음). 각 컷 위쪽에 웃빵의 속마음 독백(narration)을 2~3줄 쓰고, 그림 안에서는 인물끼리 대화를 주고받는다
+- narration: 1인칭 독백, 줄바꿈 기호로 2~3줄, 한 줄 16자 안팎, 전체 50자 이내. 그림이 보여 주는 것을 그대로 설명하지 말고 속마음 · 상황 · 시간 흐름을 말한다 (예: 그날 밤 날아온 알림 하나. / 바닥이 데워지는 데 딱 20분. 그동안 대체 왜 버텼을까.)
+- 말풍선(speech · thought)은 최대 두 줄(줄바꿈 기호), 한 줄 14자 안팎. 실제 사람이 하는 말투. 조연이 있으면 웃빵과 말을 주고받게 한다 (한 컷에 말풍선 두 개로 대화)
 - 설명하지 않는다. 그림과 표정이 웃음을 만든다
 - 누구도 깎아내리지 않는다. 외모 · 성별 · 나이 · 지역 비하, 정치 · 종교, 실존 인물 · 브랜드 · 상표 이름은 쓰지 않는다
 
@@ -43,7 +45,7 @@ const SYSTEM = `너는 한국 인스타그램의 인기 공감툰 작가다. 독
 - scene에는 그림에 그릴 것만 쓴다 (웃빵과 조연의 행동, 표정, 장소, 사물). 웃빵은 scene에 "웃빵"이라고 쓴다. 화면 속 글자나 숫자가 필요하면 그림에 넣지 말고 오버레이로 표현한다
 - 휴대폰 메시지 · 알림은 notify 오버레이로 쓴다 (sender: 보낸 사람, text: 내용)
 - 시간 · 장소 · "다음 날" 같은 안내는 caption, 효과음은 sfx(1~4자), 속마음은 thought, 말은 speech
-- 한 컷의 오버레이는 1~3개. pos는 top-left, top-center, top-right, middle-left, middle-right, bottom-left, bottom-center, bottom-right 중 하나
+- 한 컷의 오버레이는 1~3개. 대화는 말하는 사람 쪽에 둔다 (왼쪽 인물의 말은 top-left, 오른쪽 인물은 top-right). pos는 top-left, top-center, top-right, middle-left, middle-right, bottom-left, bottom-center, bottom-right 중 하나
 - 같은 컷에서 notify를 top-center에 두면 다른 오버레이는 top-*에 두지 않는다. 한 컷에서 같은 pos를 두 번 쓰지 않는다
 - speech와 thought는 되도록 top-left 또는 top-right (그림 위쪽 15%는 말풍선 자리로 비워 둔다)
 
@@ -58,10 +60,10 @@ const SYSTEM = `너는 한국 인스타그램의 인기 공감툰 작가다. 독
   "highlight": "릴스 맨 앞에 0.8초 먼저 보여 줄 가장 극적인 컷 번호 (1부터, 표정이 가장 큰 컷. 마지막 펀치 컷은 피한다)",
   "cast": "웃빵을 뺀 조연의 외모를 구체적으로 (나이대, 머리, 옷 색, 동물이면 종과 털색). 조연이 없으면 \"조연 없음\". 사람 조연이 있으면 실존 인물을 닮지 않은 가상의 인물이라고 끝에 쓴다",
   "setting": "주된 장소 한 문장",
-  "panels": [{ "scene": "...", "overlays": [{ "kind": "speech", "text": "...", "pos": "top-right" }] }],
+  "panels": [{ "scene": "...", "narration": "첫 줄\\n둘째 줄", "overlays": [{ "kind": "speech", "text": "...", "pos": "top-right" }] }],
   "caption": "인스타 게시물 문구: 첫 줄 공감 훅 + 이모지 1개, 빈 줄, 짧은 한두 줄, 빈 줄, 댓글을 부르는 질문 한 줄 (독자가 자기 경험을 답하고 싶어지게, 예: 여러분은 몇 시까지 버텨 봤어요?), 친구 태그 유도 한 줄, 빈 줄, 해시태그 8~10개 (#웃빵 #공감툰 #인스타툰 #일상툰 포함, #웃빵은 맨 앞)"
 }
-panels는 4~6개.`;
+panels는 5~7개. 모든 컷에 narration을 쓴다 (마지막 펀치 컷만 비워도 된다).`;
 
 const POSITIONS: Position[] = [
   'top-left',
@@ -95,8 +97,8 @@ type Draft = Omit<Episode, 'highlight'> & { category: string; ideas?: string[]; 
 
 const validate = (draft: Draft): void => {
   if (!draft.slug || !/^[a-z0-9-]+$/.test(draft.slug)) throw new Error(`slug 형식이 틀렸습니다: ${draft.slug}`);
-  if (!Array.isArray(draft.panels) || draft.panels.length < 4 || draft.panels.length > 6) {
-    throw new Error(`컷 수가 4~6개가 아닙니다: ${draft.panels?.length}`);
+  if (!Array.isArray(draft.panels) || draft.panels.length < 5 || draft.panels.length > 7) {
+    throw new Error(`컷 수가 5~7개가 아닙니다: ${draft.panels?.length}`);
   }
   for (const panel of draft.panels) {
     if (!panel.scene || !Array.isArray(panel.overlays)) throw new Error('컷에 scene이나 overlays가 없습니다.');
@@ -139,7 +141,11 @@ export const writeEpisode = async (made: MadeToon[], date: string): Promise<{ ep
         setting: draft.setting,
         hook: draft.hook,
         highlight: Number(draft.highlight) || 3,
-        panels: draft.panels.map((p, i) => ({ scene: p.scene, overlays: fixLayout(p.overlays, i === 0) })),
+        panels: draft.panels.map((p, i) => ({
+          scene: p.scene,
+          ...(p.narration ? { narration: p.narration.slice(0, 80) } : {}),
+          overlays: fixLayout(p.overlays, i === 0),
+        })),
         caption: draft.caption,
       };
       console.log(`아이디어: ${(draft.ideas ?? []).join(' / ')}`);

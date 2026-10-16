@@ -7,7 +7,9 @@ import { spawn } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
-import { type Episode, hookHtml, OVERLAY_CSS, overlayHtml } from './template.ts';
+import { type Episode, hookHtml, OVERLAY_CSS, overlayHtml, STORY_HEIGHT } from './template.ts';
+
+const storyHtml = (text: string): string => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>');
 
 const WIDTH = 1080;
 const HEIGHT = 1920;
@@ -24,7 +26,9 @@ const INTRO = 0.8;
 // 컷마다 보여 줄 시간: 오버레이가 다 뜬 뒤 읽을 시간을 준다. 마지막 컷은 조금 더 길게
 const panelDurations = (episode: Episode): number[] =>
   episode.panels.map((panel, i) => {
-    const base = 0.6 + panel.overlays.length * 0.75 + 1.6;
+    // 독백이 있으면 글자 수만큼 읽을 시간을 더 준다 (한 글자 0.05초, 최대 2.5초)
+    const reading = Math.min(2.5, (panel.narration?.length ?? 0) * 0.05);
+    const base = 0.6 + panel.overlays.length * 0.75 + 1.6 + reading;
     return Math.max(3, base) + (i === episode.panels.length - 1 ? 0.8 : 0);
   });
 
@@ -51,7 +55,7 @@ const buildHtml = (
     position: absolute; left: ${PANEL_LEFT}px; top: ${PANEL_TOP}px; width: 1080px; height: 1440px; overflow: hidden;
     transform: scale(${PANEL_SCALE}); transform-origin: top left; border-radius: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.35);
   }
-  .panel { inset: 0; }
+  .panel { inset: 0; background: #fff8ec; }
   .panel img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 60%; }
   .panel .ov > * { scale: 0; }
   /* 맨 앞 하이라이트: 가장 극적인 컷을 확 다가오게 보여 주고 흰 번쩍임으로 1컷에 넘긴다 */
@@ -75,9 +79,12 @@ ${arts.map((art, i) => `<div class="bg" data-i="${i}"><img src="${art}" alt="" /
 <div class="frame">
 ${episode.panels
   .map(
-    (panel, i) => `<div class="panel" data-i="${i}"><img class="art" src="${arts[i]}" alt="" />${
+    // 독백이 있는 컷은 컷 이미지와 같게 위는 글, 아래는 그림 무대
+    (panel, i) => `<div class="panel" data-i="${i}">${
+      panel.narration ? `<div class="story"><div>${storyHtml(panel.narration)}</div></div>` : ''
+    }<div class="stage${panel.narration ? ' with-story' : ''}" style="top: ${panel.narration ? STORY_HEIGHT : 0}px"><img class="art" src="${arts[i]}" alt="" />${
       i === 0 && episode.hook ? hookHtml(episode.hook) : ''
-    }<div class="ov">${panel.overlays.map((o) => overlayHtml(o)).join('')}</div></div>`,
+    }<div class="ov">${panel.overlays.map((o) => overlayHtml(o)).join('')}</div></div></div>`,
   )
   .join('\n')}
 <div class="intro"><img class="art" src="${arts[highlight]}" alt="" /><div class="ovs">${episode.panels[highlight].overlays

@@ -57,14 +57,18 @@ const POSITION_CSS: Record<Position, string> = {
   'bottom-right': 'bottom: 72px; right: 56px;',
 };
 
+// 말풍선 꼬리: 곡선으로 휘어 내려가는 꼬리 (위쪽 끝이 말풍선 테두리를 덮어서 이어져 보인다). 기본은 왼쪽 아래를 가리킨다
+const TAIL_SVG =
+  '<svg class="tail" viewBox="0 0 60 48" width="60" height="48"><path d="M8 0 C 18 18, 16 32, 4 45 C 28 38, 44 22, 54 0" fill="#fff" stroke="#3a2a1f" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+
 export const overlayHtml = (overlay: Overlay): string => {
   const style = POSITION_CSS[overlay.pos];
   const text = textHtml(overlay.text);
   switch (overlay.kind) {
     case 'speech':
-      return `<div class="bubble speech ${tailClass(overlay.pos)}" style="${style}">${text}</div>`;
+      return `<div class="bubble speech ${tailClass(overlay.pos)}" style="${style}">${text}${TAIL_SVG}</div>`;
     case 'thought':
-      return `<div class="bubble thought" style="${style}">${text}</div>`;
+      return `<div class="bubble thought ${tailClass(overlay.pos)}" style="${style}">${text}<i class="dot1"></i><i class="dot2"></i></div>`;
     case 'caption':
       return `<div class="caption" style="${style}">${text}</div>`;
     case 'sfx':
@@ -79,25 +83,35 @@ export const overlayHtml = (overlay: Overlay): string => {
 
 // 말풍선 · 시간 상자 · 효과음 · 알림 스타일 (컷 이미지와 릴스가 함께 쓴다)
 export const OVERLAY_CSS = `
+  /* 2026-10-16 말풍선 디자인 개선 (사용자 요청): 웃빵 테두리와 어울리는 짙은 갈색 선, 곡선 꼬리, 구름 생각 풍선 */
   .bubble {
-    position: absolute; max-width: 640px; padding: 28px 40px;
-    font-family: 'Jua', 'Pretendard Variable', sans-serif; font-size: 50px; line-height: 1.32; color: #1d1d1f;
-    background: #fff; border: 5px solid #1d1d1f; word-break: keep-all;
+    position: absolute; max-width: 640px; padding: 26px 42px 28px;
+    font-family: 'Jua', 'Pretendard Variable', sans-serif; font-size: 50px; line-height: 1.34; color: #3a2a1f;
+    background: #fff; border: 5px solid #3a2a1f; word-break: keep-all; text-align: center;
   }
-  .speech { border-radius: 48px; box-shadow: 6px 8px 0 rgba(0,0,0,0.18); }
-  /* 말풍선 꼬리: 아래쪽 가운데에서 비스듬히 */
-  .speech::after {
-    content: ''; position: absolute; left: 50%; bottom: -34px; width: 40px; height: 40px;
-    background: #fff; border-right: 5px solid #1d1d1f; border-bottom: 5px solid #1d1d1f;
-    transform: translateX(-50%) rotate(45deg) skew(12deg, 12deg);
-  }
-  .speech.tail-left::after { left: 26%; }
-  .speech.tail-right::after { left: 74%; }
-  .thought { border-radius: 999px; border-style: dashed; }
+  .speech { border-radius: 56px; box-shadow: 0 7px 0 rgba(58,42,31,0.16); }
+  .speech .tail { position: absolute; bottom: -43px; left: 50%; margin-left: -30px; }
+  .speech.tail-right .tail { left: 40%; }
+  .speech.tail-left .tail { left: 60%; transform: scaleX(-1); }
+  /* 생각 풍선: 둥근 구름 + 작은 동그라미 두 개 */
+  .thought { border-radius: 64px; background: #fffaf2; box-shadow: 0 7px 0 rgba(58,42,31,0.12); }
+  .thought i { position: absolute; display: block; border-radius: 50%; background: #fffaf2; border: 4px solid #3a2a1f; }
+  .thought .dot1 { width: 30px; height: 30px; bottom: -40px; left: 46%; }
+  .thought .dot2 { width: 16px; height: 16px; bottom: -66px; left: 40%; }
+  .thought.tail-left .dot1 { left: 58%; }
+  .thought.tail-left .dot2 { left: 66%; }
   .caption {
-    position: absolute; padding: 14px 28px; border-radius: 16px;
-    font-family: 'Pretendard Variable', sans-serif; font-weight: 800; font-size: 46px; letter-spacing: 1px;
-    color: #fff; background: rgba(29,29,31,0.88);
+    position: absolute; padding: 14px 30px; border-radius: 20px;
+    font-family: 'Pretendard Variable', sans-serif; font-weight: 800; font-size: 44px; letter-spacing: 0.5px;
+    color: #fff7e8; background: rgba(58,42,31,0.92);
+  }
+  /* 독백이 있는 컷: 위쪽은 따뜻한 미색 바탕의 글, 아래는 그림 무대 */
+  .stage { position: absolute; left: 0; right: 0; bottom: 0; overflow: hidden; }
+  .stage.with-story { border-top: 5px solid #3a2a1f; }
+  .story {
+    position: absolute; left: 0; right: 0; top: 0; height: 380px; display: flex; align-items: center;
+    padding: 36px 76px 24px; background: #fff8ec; font-family: 'Pretendard Variable', sans-serif; font-weight: 600;
+    font-size: 52px; line-height: 1.5; color: #3a2a1f; word-break: keep-all; letter-spacing: -0.5px;
   }
   .sfx {
     position: absolute; font-family: 'Jua', sans-serif; font-size: 110px; color: #ff4f7a;
@@ -135,13 +149,7 @@ export const buildPanelHtml = (image: string, panel: Panel, index: number, total
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { width: 1080px; height: 1440px; overflow: hidden; background: #fff; }
-  .frame { position: relative; width: 1080px; height: 1440px; background: #fffdf8; }
-  .stage { position: absolute; left: 0; right: 0; bottom: 0; overflow: hidden; }
-  .story {
-    position: absolute; left: 0; right: 0; top: 0; height: ${STORY_HEIGHT}px; display: flex; align-items: center;
-    padding: 40px 76px 24px; font-family: 'Pretendard Variable', sans-serif; font-weight: 600; font-size: 52px;
-    line-height: 1.5; color: #232326; word-break: keep-all; letter-spacing: -0.5px;
-  }
+  .frame { position: relative; width: 1080px; height: 1440px; background: #fff8ec; }
   .art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 ${OVERLAY_CSS}
   .page {
@@ -153,7 +161,7 @@ ${OVERLAY_CSS}
 <body>
 <div class="frame">
   ${panel.narration ? `<div class="story"><div>${textHtml(panel.narration)}</div></div>` : ''}
-  <div class="stage" style="top: ${panel.narration ? STORY_HEIGHT : 0}px">
+  <div class="stage${panel.narration ? ' with-story' : ''}" style="top: ${panel.narration ? STORY_HEIGHT : 0}px">
     <img class="art" src="${image}" alt="" />
     ${hook ? hookHtml(hook) : ''}
     ${panel.overlays.map(overlayHtml).join('\n    ')}
