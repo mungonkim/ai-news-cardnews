@@ -1,5 +1,5 @@
 // 매일 공감툰 대본 쓰기: 최근에 만든 편을 피해 새 대본(Episode)을 Claude에게 받는다.
-import { askJson } from '../pipeline/claude.ts';
+import { askStructured } from '../pipeline/claude.ts';
 import type { Episode, Overlay, Position } from './template.ts';
 
 export type MadeToon = { date: string; slug: string; title: string; category: string };
@@ -64,6 +64,46 @@ const SYSTEM = `너는 한국 인스타그램의 인기 공감툰 작가다. 독
   "caption": "인스타 게시물 문구: 첫 줄 공감 훅 + 이모지 1개, 빈 줄, 짧은 한두 줄, 빈 줄, 댓글을 부르는 질문 한 줄 (독자가 자기 경험을 답하고 싶어지게, 예: 여러분은 몇 시까지 버텨 봤어요?), 친구 태그 유도 한 줄, 빈 줄, 해시태그 8~10개 (#웃빵 #공감툰 #인스타툰 #일상툰 포함, #웃빵은 맨 앞)"
 }
 panels는 5~7개. 모든 컷에 narration을 쓴다 (마지막 펀치 컷만 비워도 된다).`;
+
+// 대본 응답 형식 (output_config.format의 JSON 스키마). 모든 칸을 필수로 두고 빈 값은 빈 문자열로 받는다
+const str = { type: 'string' };
+const obj = (properties: Record<string, unknown>): Record<string, unknown> => ({
+  type: 'object',
+  properties,
+  required: Object.keys(properties),
+  additionalProperties: false,
+});
+const DRAFT_SCHEMA = obj({
+  ideas: { type: 'array', items: str },
+  chosen_reason: str,
+  category: str,
+  slug: str,
+  title: str,
+  hook: str,
+  highlight: { type: 'integer' },
+  cast: str,
+  setting: str,
+  panels: {
+    type: 'array',
+    items: obj({
+      scene: str,
+      narration: str,
+      overlays: {
+        type: 'array',
+        items: obj({
+          kind: { type: 'string', enum: ['speech', 'thought', 'caption', 'sfx', 'notify'] },
+          text: str,
+          pos: {
+            type: 'string',
+            enum: ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'],
+          },
+          sender: { type: 'string', description: 'notify일 때만 보낸 사람, 나머지는 빈 문자열' },
+        }),
+      },
+    }),
+  },
+  caption: str,
+});
 
 const POSITIONS: Position[] = [
   'top-left',
@@ -131,7 +171,14 @@ export const writeEpisode = async (made: MadeToon[], date: string): Promise<{ ep
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      const draft = (await askJson({ system: SYSTEM, user, maxTokens: 6000 })) as Draft;
+      const draft = (await askStructured({ system: SYSTEM, user, schema: DRAFT_SCHEMA, maxTokens: 16000 })) as Draft;
+      // 구조화된 출력에서는 모든 칸이 필수라 알림이 아닌 오버레이도 sender(빈 문자열)를 갖는다 → 지운다
+      for (const panel of draft.panels) {
+        panel.overlays = panel.overlays.map((o) =>
+          o.kind === 'notify' ? o : { kind: o.kind, text: o.text, pos: o.pos },
+        ) as Overlay[];
+        if (!panel.narration) delete panel.narration;
+      }
       validate(draft);
       const episode: Episode = {
         slug: `${date}-${draft.slug}`,

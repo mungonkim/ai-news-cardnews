@@ -37,6 +37,36 @@ export const extractJson = (text: string): unknown => {
   }
 };
 
+// 구조화된 출력: 응답을 JSON 스키마로 강제한다 (output_config.format).
+// 글로 받은 JSON을 읽다가 따옴표 · 잘림으로 자주 깨져서(2026-10-25~26 툰 실패) 툰 대본은 이 방식으로 받는다.
+export const askStructured = async (options: {
+  system: string;
+  user: string;
+  schema: Record<string, unknown>;
+  maxTokens?: number;
+}): Promise<unknown> => {
+  const anthropic = getClient();
+  const response = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: options.maxTokens ?? 16000,
+    system: options.system,
+    messages: [{ role: 'user', content: options.user }],
+    output_config: { format: { type: 'json_schema', schema: options.schema } },
+  });
+  // 잘렸거나 거절된 답은 JSON이 불완전하므로 이유를 남기고 실패로 처리한다
+  if (response.stop_reason === 'max_tokens') {
+    throw new Error(`답변이 길이 제한(${options.maxTokens ?? 16000}토큰)에서 잘렸습니다.`);
+  }
+  if (response.stop_reason === 'refusal') {
+    throw new Error(`Claude가 답변을 거절했습니다: ${response.stop_details?.category ?? '이유 없음'}`);
+  }
+  const text = response.content
+    .filter((block): block is Anthropic.Messages.TextBlock => block.type === 'text')
+    .map((block) => block.text)
+    .join('');
+  return JSON.parse(text);
+};
+
 export const askJson = async (options: AskOptions): Promise<unknown> => {
   const anthropic = getClient();
   const tools: Anthropic.Messages.ToolUnion[] = options.webSearch
